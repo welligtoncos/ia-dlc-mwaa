@@ -1,0 +1,544 @@
+---
+description: "AI-DLC (AI-Driven Development Life Cycle) adaptive workflow for software development"
+alwaysApply: true
+---
+
+# PRIORIDADE: Este workflow SUBSTITUI todos os outros workflows embutidos
+# Quando o usuário solicitar desenvolvimento de software, SEMPRE siga este workflow PRIMEIRO
+
+## Princípio do Workflow Adaptativo
+**O workflow se adapta ao trabalho, e não o contrário.**
+
+O modelo de IA avalia de forma inteligente quais estágios são necessários com base em:
+1. Intenção declarada do usuário e clareza
+2. Estado da base de código existente (se houver)
+3. Complexidade e escopo da mudança
+4. Avaliação de risco e impacto
+
+## OBRIGATÓRIO: Carregamento dos Detalhes das Regras
+**CRÍTICO**: Ao executar qualquer fase, você DEVE ler e usar o conteúdo relevante dos arquivos de detalhes das regras. Verifique estes caminhos nesta ordem e use o primeiro que existir, independentemente de qual IDE ou método de configuração foi usado:
+- `.aidlc/aidlc-rules/aws-aidlc-rule-details/` (típico com configuração assistida por IA)
+- `.aidlc-rule-details/` (típico com Cursor, Cline, Claude Code, GitHub Copilot, OpenAI Codex)
+- `.kiro/aws-aidlc-rule-details/` (típico com Kiro IDE e CLI)
+- `.amazonq/aws-aidlc-rule-details/` (típico com Amazon Q Developer)
+
+Todas as referências subsequentes a arquivos de detalhes das regras (ex.: `common/process-overview.md`, `inception/workspace-detection.md`) são relativas ao diretório de detalhes das regras que foi resolvido acima.
+
+**Regras Comuns**: SEMPRE carregue as regras comuns no início do workflow:
+- Carregue `common/process-overview.md` para a visão geral do workflow
+- Carregue `common/session-continuity.md` para orientação de retomada de sessão
+- Carregue `common/content-validation.md` para requisitos de validação de conteúdo
+- Carregue `common/question-format-guide.md` para regras de formatação de perguntas
+- Consulte estes arquivos ao longo da execução do workflow
+
+## OBRIGATÓRIO: Carregamento de Extensões (Otimizado para Contexto)
+**CRÍTICO**: No início do workflow, varra o diretório `extensions/` de forma recursiva, mas carregue APENAS os arquivos leves de opt-in — NÃO os arquivos completos de regras. Os arquivos completos de regras são carregados sob demanda após o usuário optar por ativá-los.
+
+**Processo de carregamento**:
+1. Liste todos os subdiretórios sob `extensions/` (ex.: `extensions/security/`, `extensions/compliance/`)
+2. Em cada subdiretório, carregue APENAS os arquivos `*.opt-in.md` — estes contêm o prompt de opt-in da extensão. O arquivo de regras correspondente é derivado por convenção: remova o sufixo `.opt-in.md` e acrescente `.md` (ex.: `security-baseline.opt-in.md` → `security-baseline.md`)
+3. NÃO carregue arquivos completos de regras (ex.: `security-baseline.md`) nesta etapa
+
+**Carregamento Diferido de Regras**:
+- Durante a Análise de Requisitos, os prompts de opt-in dos arquivos `*.opt-in.md` carregados são apresentados ao usuário
+- Quando o usuário ATIVA uma extensão, carregue o arquivo de regras correspondente (derivado pela convenção de nomeação) nesse momento
+- Quando o usuário DESATIVA, o arquivo completo de regras nunca é carregado — economizando contexto
+- Extensões sem um arquivo `*.opt-in.md` correspondente são sempre aplicadas — carregue seus arquivos de regras imediatamente no início do workflow
+
+**Aplicação** (aplica-se apenas a extensões carregadas/habilitadas):
+- As regras de extensão são restrições rígidas, não orientações opcionais
+- Em cada estágio, o modelo avalia de forma inteligente quais regras de extensão são aplicáveis com base no propósito do estágio, nos artefatos sendo produzidos e no contexto do trabalho — aplique apenas as regras que forem relevantes
+- Regras que não são aplicáveis ao estágio atual devem ser marcadas como N/A no resumo de conformidade (isso não é um achado bloqueante)
+- Não conformidade com qualquer regra de extensão habilitada e aplicável é um **achado bloqueante** — NÃO apresente a conclusão do estágio até que seja resolvido
+- Ao apresentar a conclusão do estágio, inclua um resumo da conformidade com as regras de extensão (conforme/não conforme/N/A por regra, com breve justificativa para determinações N/A)
+
+**Aplicação Condicional**: Extensões podem ser habilitadas/desabilitadas condicionalmente. Veja `inception/requirements-analysis.md` para o mecanismo de opt-in. Antes de aplicar qualquer extensão em QUALQUER estágio, verifique seu status `Enabled` em `aidlc-docs/aidlc-state.md` sob `## Extension Configuration`. Ignore extensões desabilitadas e registre o ignore em audit.md. Por padrão, aplique se nenhuma configuração existir.
+
+## OBRIGATÓRIO: Validação de Conteúdo
+**CRÍTICO**: Antes de criar QUALQUER arquivo, você DEVE validar o conteúdo de acordo com as regras de `common/content-validation.md`:
+- Validar sintaxe de diagramas Mermaid
+- Validar diagramas ASCII art (veja `common/ascii-diagram-standards.md`)
+- Escapar caracteres especiais corretamente
+- Fornecer alternativas em texto para conteúdo visual complexo
+- Testar compatibilidade de parsing do conteúdo
+
+## OBRIGATÓRIO: Formato de Arquivo de Perguntas
+**CRÍTICO**: Ao fazer perguntas em qualquer fase, você DEVE seguir as diretrizes de formato de perguntas.
+
+**Veja `common/question-format-guide.md` para as regras completas de formatação de perguntas, incluindo**:
+- Formato de múltipla escolha (opções A, B, C, D, E)
+- Uso da tag [Answer]:
+- Validação de respostas e resolução de ambiguidades
+
+## OBRIGATÓRIO: Mensagem de Boas-Vindas Personalizada
+**CRÍTICO**: Ao iniciar QUALQUER solicitação de desenvolvimento de software, você DEVE exibir a mensagem de boas-vindas.
+
+**Como Exibir a Mensagem de Boas-Vindas**:
+1. Carregue a mensagem de boas-vindas de `common/welcome-message.md` (no diretório de detalhes das regras resolvido)
+2. Exiba a mensagem completa ao usuário
+3. Isso deve ser feito apenas UMA VEZ no início de um novo workflow
+4. NÃO carregue este arquivo em interações subsequentes para economizar espaço de contexto
+
+# Workflow Adaptativo de Desenvolvimento de Software
+
+---
+
+# FASE DE INCEPTION
+
+**Propósito**: Planejamento, levantamento de requisitos e decisões arquiteturais
+
+**Foco**: Determinar O QUE construir e POR QUÊ
+
+**Estágios na FASE DE INCEPTION**:
+- Detecção do Workspace (SEMPRE)
+- Engenharia Reversa (CONDICIONAL - apenas Brownfield)
+- Análise de Requisitos (SEMPRE - profundidade adaptativa)
+- Histórias de Usuário (CONDICIONAL)
+- Planejamento do Workflow (SEMPRE)
+- Design da Aplicação (CONDICIONAL)
+- Geração de Unidades (CONDICIONAL)
+
+---
+
+## Detecção do Workspace (SEMPRE EXECUTAR)
+
+1. **OBRIGATÓRIO**: Registrar a solicitação inicial do usuário em audit.md com a entrada bruta completa
+2. Carregar todas as etapas de `inception/workspace-detection.md`
+3. Executar a detecção do workspace:
+   - Verificar se existe aidlc-state.md (retomar se encontrado)
+   - Varrer o workspace em busca de código existente
+   - Determinar se é brownfield ou greenfield
+   - Verificar se existem artefatos de engenharia reversa
+4. Determinar a próxima fase: Engenharia Reversa (se brownfield e sem artefatos) OU Análise de Requisitos
+5. **OBRIGATÓRIO**: Registrar achados em audit.md
+6. Apresentar mensagem de conclusão ao usuário (veja workspace-detection.md para formatos de mensagem)
+7. Prosseguir automaticamente para a próxima fase
+
+## Engenharia Reversa (CONDICIONAL - Apenas Brownfield)
+
+**Executar SE**:
+- Base de código existente detectada
+- Nenhum artefato prévio de engenharia reversa encontrado
+
+**Pular SE**:
+- Projeto greenfield
+- Artefatos prévios de engenharia reversa existem
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar o início da engenharia reversa em audit.md
+2. Carregar todas as etapas de `inception/reverse-engineering.md`
+3. Executar a engenharia reversa:
+   - Analisar todos os pacotes e componentes
+   - Gerar uma visão geral de negócio de todo o sistema cobrindo as transações de negócio
+   - Gerar documentação de arquitetura
+   - Gerar documentação da estrutura de código
+   - Gerar documentação de API
+   - Gerar inventário de componentes
+   - Gerar Diagramas de Interação descrevendo como as transações de negócio são implementadas entre componentes
+   - Gerar documentação da stack tecnológica
+   - Gerar documentação de dependências
+
+4. **Aguardar Aprovação Explícita**: Apresentar mensagem detalhada de conclusão (veja reverse-engineering.md para o formato da mensagem) - NÃO PROSSIGA até que o usuário confirme
+5. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+## Análise de Requisitos (SEMPRE EXECUTAR - Profundidade Adaptativa)
+
+**Sempre executa**, mas a profundidade varia com base na clareza e complexidade da solicitação:
+- **Mínima**: Solicitação simples e clara - apenas documentar a análise de intenção
+- **Padrão**: Complexidade normal - reunir requisitos funcionais e não funcionais
+- **Abrangente**: Complexa, alto risco - requisitos detalhados com rastreabilidade
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `inception/requirements-analysis.md`
+3. Executar a análise de requisitos:
+   - Carregar artefatos de engenharia reversa (se brownfield)
+   - Analisar a solicitação do usuário (análise de intenção)
+   - Determinar a profundidade de requisitos necessária
+   - Avaliar os requisitos atuais
+   - Fazer perguntas de esclarecimento (se necessário)
+   - Gerar documento de requisitos
+4. Executar na profundidade apropriada (mínima/padrão/abrangente)
+5. **Aguardar Aprovação Explícita**: Seguir o formato de aprovação das etapas detalhadas de requirements-analysis.md - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+## Histórias de Usuário (CONDICIONAL)
+
+**AVALIAÇÃO INTELIGENTE**: Use análise multifatorial para determinar se as histórias de usuário agregam valor:
+
+**SEMPRE Executar SE** (Indicadores de Alta Prioridade):
+- Novas funcionalidades ou recursos voltados ao usuário
+- Mudanças que afetam fluxos de trabalho ou interações do usuário
+- Múltiplos tipos de usuário ou personas envolvidos
+- Requisitos de negócio complexos com necessidade de critérios de aceitação
+- Colaboração de equipe multifuncional necessária
+- Mudanças em API ou serviço voltadas ao cliente
+- Novas capacidades ou melhorias de produto
+
+**PROVAVELMENTE Executar SE** (Prioridade Média - Avaliar Complexidade):
+- Modificações em funcionalidades existentes voltadas ao usuário
+- Mudanças de backend que afetam indiretamente a experiência do usuário
+- Trabalho de integração que impacta fluxos de trabalho do usuário
+- Melhorias de desempenho com benefícios visíveis ao usuário
+- Aprimoramentos de segurança que afetam interações do usuário
+- Mudanças no modelo de dados que afetam dados ou relatórios do usuário
+
+**AVALIAÇÃO BASEADA EM COMPLEXIDADE**: Para casos de prioridade média, execute histórias de usuário se:
+- A solicitação envolve múltiplos componentes ou serviços
+- As mudanças abrangem múltiplos pontos de contato do usuário
+- A lógica de negócio é complexa ou tem múltiplos cenários
+- Os requisitos têm ambiguidade que as histórias poderiam esclarecer
+- A implementação afeta múltiplas jornadas do usuário
+- A mudança tem impacto ou risco de negócio significativo
+
+**PULAR APENAS SE** (Baixa Prioridade - Casos Simples):
+- Refatoração interna pura com zero impacto no usuário
+- Correções de bugs simples com escopo claro e isolado
+- Mudanças de infraestrutura sem efeitos voltados ao usuário
+- Limpeza de dívida técnica sem mudanças funcionais
+- Melhorias em ferramentas de desenvolvedor ou processo de build
+- Atualizações apenas de documentação
+
+**CRITÉRIOS DE AVALIAÇÃO**: Em caso de dúvida, favoreça a inclusão de histórias de usuário para:
+- Solicitações com envolvimento de stakeholders de negócio
+- Mudanças que exigem testes de aceitação do usuário
+- Funcionalidades com múltiplas abordagens de implementação
+- Trabalho que se beneficia de entendimento compartilhado da equipe
+- Projetos em que a clareza dos requisitos é valiosa
+
+**PROCESSO DE AVALIAÇÃO**:
+1. Analisar complexidade e escopo da solicitação
+2. Identificar impacto no usuário (direto ou indireto)
+3. Avaliar contexto de negócio e necessidades dos stakeholders
+4. Considerar benefícios de colaboração da equipe
+5. Por padrão, incluir em casos limítrofes
+
+**Nota**: Se a Análise de Requisitos foi executada, as Histórias podem referenciar e construir sobre esses requisitos.
+
+**Histórias de Usuário tem duas partes dentro de um estágio**:
+1. **Parte 1 - Planejamento**: Criar plano de histórias com perguntas, coletar respostas, analisar ambiguidades, obter aprovação
+2. **Parte 2 - Geração**: Executar o plano aprovado para gerar histórias e personas
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `inception/user-stories.md`
+3. **OBRIGATÓRIO**: Realizar avaliação inteligente (Etapa 1 em user-stories.md) para validar que histórias de usuário são necessárias
+4. Carregar artefatos de engenharia reversa (se brownfield)
+5. Se Requisitos existirem, referenciá-los ao criar histórias
+6. Executar na profundidade apropriada (mínima/padrão/abrangente)
+7. **PARTE 1 - Planejamento**: Criar plano de histórias com perguntas, aguardar respostas do usuário, analisar ambiguidades, obter aprovação
+8. **PARTE 2 - Geração**: Executar o plano aprovado para gerar histórias e personas
+9. **Aguardar Aprovação Explícita**: Seguir o formato de aprovação das etapas detalhadas de user-stories.md - NÃO PROSSIGA até que o usuário confirme
+10. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+## Planejamento do Workflow (SEMPRE EXECUTAR)
+
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `inception/workflow-planning.md`
+3. **OBRIGATÓRIO**: Carregar regras de validação de conteúdo de `common/content-validation.md`
+4. Carregar todo o contexto prévio:
+   - Artefatos de engenharia reversa (se brownfield)
+   - Análise de intenção
+   - Requisitos (se executado)
+   - Histórias de usuário (se executado)
+5. Executar o planejamento do workflow:
+   - Determinar quais fases executar
+   - Determinar o nível de profundidade para cada fase
+   - Criar sequência de mudanças multi-pacote (se brownfield)
+   - Gerar visualização do workflow (VALIDAR sintaxe Mermaid antes de escrever)
+6. **OBRIGATÓRIO**: Validar todo o conteúdo antes da criação de arquivos conforme as regras de content-validation.md
+7. **Aguardar Aprovação Explícita**: Apresentar recomendações usando a linguagem da Etapa 9 de workflow-planning.md, enfatizando o controle do usuário para substituir recomendações - NÃO PROSSIGA até que o usuário confirme
+8. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+## Design da Aplicação (CONDICIONAL)
+
+**Executar SE**:
+- Novos componentes ou serviços necessários
+- Métodos de componentes e regras de negócio precisam de definição
+- Design da camada de serviço necessário
+- Dependências de componentes precisam de esclarecimento
+
+**Pular SE**:
+- Mudanças dentro dos limites de componentes existentes
+- Nenhum novo componente ou método
+- Mudanças puramente de implementação
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `inception/application-design.md`
+3. Carregar artefatos de engenharia reversa (se brownfield)
+4. Executar na profundidade apropriada (mínima/padrão/abrangente)
+5. **Aguardar Aprovação Explícita**: Apresentar mensagem detalhada de conclusão (veja application-design.md para o formato da mensagem) - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+## Geração de Unidades (CONDICIONAL)
+
+**Executar SE**:
+- O sistema precisa de decomposição em múltiplas unidades de trabalho
+- Múltiplos serviços ou módulos necessários
+- Sistema complexo exigindo decomposição estruturada
+
+**Pular SE**:
+- Unidade única e simples
+- Nenhuma decomposição necessária
+- Implementação direta de componente único
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `inception/units-generation.md`
+3. Carregar artefatos de engenharia reversa (se brownfield)
+4. Executar na profundidade apropriada (mínima/padrão/abrangente)
+5. **Aguardar Aprovação Explícita**: Apresentar mensagem detalhada de conclusão (veja units-generation.md para o formato da mensagem) - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+---
+
+# 🟢 FASE DE CONSTRUCTION
+
+**Propósito**: Design detalhado, implementação de NFR e geração de código
+
+**Foco**: Determinar COMO construir
+
+**Estágios na FASE DE CONSTRUCTION**:
+- Loop Por Unidade (executa para cada unidade):
+  - Design Funcional (CONDICIONAL, por unidade)
+  - Requisitos NFR (CONDICIONAL, por unidade)
+  - Design NFR (CONDICIONAL, por unidade)
+  - Design de Infraestrutura (CONDICIONAL, por unidade)
+  - Geração de Código (SEMPRE, por unidade)
+- Build e Testes (SEMPRE - após todas as unidades concluídas)
+
+**Nota**: Cada unidade é concluída completamente (design + código) antes de passar para a próxima unidade.
+
+---
+
+## Loop Por Unidade (Executa para Cada Unidade)
+
+**Para cada unidade de trabalho, execute os seguintes estágios em sequência:**
+
+### Design Funcional (CONDICIONAL, por unidade)
+
+**Executar SE**:
+- Novos modelos de dados ou schemas
+- Lógica de negócio complexa
+- Regras de negócio precisam de design detalhado
+
+**Pular SE**:
+- Mudanças de lógica simples
+- Nenhuma nova lógica de negócio
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante este estágio em audit.md
+2. Carregar todas as etapas de `construction/functional-design.md`
+3. Executar o design funcional para esta unidade
+4. **OBRIGATÓRIO**: Apresentar mensagem de conclusão padronizada de 2 opções conforme definido em functional-design.md - NÃO use comportamento emergente de 3 opções
+5. **Aguardar Aprovação Explícita**: O usuário deve escolher entre "Solicitar Alterações" ou "Continuar para o Próximo Estágio" - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+### Requisitos NFR (CONDICIONAL, por unidade)
+
+**Executar SE**:
+- Requisitos de desempenho existem
+- Considerações de segurança necessárias
+- Preocupações de escalabilidade presentes
+- Seleção de stack tecnológica necessária
+
+**Pular SE**:
+- Nenhum requisito NFR
+- Stack tecnológica já determinada
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante este estágio em audit.md
+2. Carregar todas as etapas de `construction/nfr-requirements.md`
+3. Executar avaliação de NFR para esta unidade
+4. **OBRIGATÓRIO**: Apresentar mensagem de conclusão padronizada de 2 opções conforme definido em nfr-requirements.md - NÃO use comportamento emergente
+5. **Aguardar Aprovação Explícita**: O usuário deve escolher entre "Solicitar Alterações" ou "Continuar para o Próximo Estágio" - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+### Design NFR (CONDICIONAL, por unidade)
+
+**Executar SE**:
+- Requisitos NFR foi executado
+- Padrões NFR precisam ser incorporados
+
+**Pular SE**:
+- Nenhum requisito NFR
+- Requisitos NFR foi pulado
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante este estágio em audit.md
+2. Carregar todas as etapas de `construction/nfr-design.md`
+3. Executar o design NFR para esta unidade
+4. **OBRIGATÓRIO**: Apresentar mensagem de conclusão padronizada de 2 opções conforme definido em nfr-design.md - NÃO use comportamento emergente
+5. **Aguardar Aprovação Explícita**: O usuário deve escolher entre "Solicitar Alterações" ou "Continuar para o Próximo Estágio" - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+### Design de Infraestrutura (CONDICIONAL, por unidade)
+
+**Executar SE**:
+- Serviços de infraestrutura precisam de mapeamento
+- Arquitetura de implantação necessária
+- Recursos de nuvem precisam de especificação
+
+**Pular SE**:
+- Nenhuma mudança de infraestrutura
+- Infraestrutura já definida
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante este estágio em audit.md
+2. Carregar todas as etapas de `construction/infrastructure-design.md`
+3. Executar o design de infraestrutura para esta unidade
+4. **OBRIGATÓRIO**: Apresentar mensagem de conclusão padronizada de 2 opções conforme definido em infrastructure-design.md - NÃO use comportamento emergente
+5. **Aguardar Aprovação Explícita**: O usuário deve escolher entre "Solicitar Alterações" ou "Continuar para o Próximo Estágio" - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+### Geração de Código (SEMPRE EXECUTAR, por unidade)
+
+**Sempre executa para cada unidade**
+
+**Geração de Código tem duas partes dentro de um estágio**:
+1. **Parte 1 - Planejamento**: Criar plano detalhado de geração de código com etapas explícitas
+2. **Parte 2 - Geração**: Executar o plano aprovado para gerar código, testes e artefatos
+
+**Execução**:
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante este estágio em audit.md
+2. Carregar todas as etapas de `construction/code-generation.md`
+3. **PARTE 1 - Planejamento**: Criar plano de geração de código com checkboxes, obter aprovação do usuário
+4. **PARTE 2 - Geração**: Executar o plano aprovado para gerar código para esta unidade
+5. **OBRIGATÓRIO**: Apresentar mensagem de conclusão padronizada de 2 opções conforme definido em code-generation.md - NÃO use comportamento emergente
+6. **Aguardar Aprovação Explícita**: O usuário deve escolher entre "Solicitar Alterações" ou "Continuar para o Próximo Estágio" - NÃO PROSSIGA até que o usuário confirme
+7. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+---
+
+## Build e Testes (SEMPRE EXECUTAR)
+
+1. **OBRIGATÓRIO**: Registrar qualquer entrada do usuário durante esta fase em audit.md
+2. Carregar todas as etapas de `construction/build-and-test.md`
+3. Gerar instruções abrangentes de build e testes:
+   - Instruções de build para todas as unidades
+   - Instruções de execução de testes unitários
+   - Instruções de testes de integração (testar interações entre unidades)
+   - Instruções de testes de desempenho (se aplicável)
+   - Instruções de testes adicionais conforme necessário (testes de contrato, testes de segurança, testes e2e)
+4. Criar arquivos de instrução no subdiretório build-and-test/: build-instructions.md, unit-test-instructions.md, integration-test-instructions.md, performance-test-instructions.md, build-and-test-summary.md
+5. **Aguardar Aprovação Explícita**: Perguntar: "**Instruções de build e testes concluídas. Pronto para prosseguir para o estágio de Operations?**" - NÃO PROSSIGA até que o usuário confirme
+6. **OBRIGATÓRIO**: Registrar a resposta do usuário em audit.md com a entrada bruta completa
+
+---
+
+# 🟡 FASE DE OPERATIONS
+
+**Propósito**: Placeholder para futuros workflows de implantação e monitoramento
+
+**Foco**: Como IMPLANTAR e EXECUTAR (expansão futura)
+
+**Estágios na FASE DE OPERATIONS**:
+- Operations (PLACEHOLDER)
+
+---
+
+## Operations (PLACEHOLDER)
+
+**Status**: Este estágio é atualmente um placeholder para expansão futura.
+
+O estágio de Operations eventualmente incluirá:
+- Planejamento e execução de implantação
+- Configuração de monitoramento e observabilidade
+- Procedimentos de resposta a incidentes
+- Workflows de manutenção e suporte
+- Checklists de prontidão para produção
+
+**Estado Atual**: Todas as atividades de build e testes são tratadas na fase de CONSTRUCTION.
+
+## Princípios-Chave
+
+- **Execução Adaptativa**: Executar apenas estágios que agregam valor
+- **Planejamento Transparente**: Sempre mostrar o plano de execução antes de começar
+- **Controle do Usuário**: O usuário pode solicitar inclusão/exclusão de estágios
+- **Rastreamento de Progresso**: Atualizar aidlc-state.md com estágios executados e pulados
+- **Trilha de Auditoria Completa**: Registrar TODAS as entradas do usuário e respostas da IA em audit.md com timestamps
+  - **CRÍTICO**: Capturar a ENTRADA BRUTA COMPLETA do usuário exatamente como fornecida
+  - **CRÍTICO**: Nunca resumir ou parafrasear a entrada do usuário no log de auditoria
+  - **CRÍTICO**: Registrar cada interação, não apenas aprovações
+- **Foco em Qualidade**: Mudanças complexas recebem tratamento completo, mudanças simples permanecem eficientes
+- **Validação de Conteúdo**: Sempre validar conteúdo antes da criação de arquivos conforme as regras de content-validation.md
+- **SEM COMPORTAMENTO EMERGENTE**: As fases de Construction DEVEM usar mensagens de conclusão padronizadas de 2 opções conforme definido em seus respectivos arquivos de regras. NÃO crie menus de 3 opções ou outros padrões de navegação emergentes.
+
+## OBRIGATÓRIO: Aplicação de Checkboxes no Nível do Plano
+
+### REGRAS OBRIGATÓRIAS PARA EXECUÇÃO DO PLANO
+1. **NUNCA conclua qualquer trabalho sem atualizar os checkboxes do plano**
+2. **IMEDIATAMENTE após concluir QUALQUER etapa descrita em um arquivo de plano, marque essa etapa [x]**
+3. **Isso deve acontecer na MESMA interação em que o trabalho é concluído**
+4. **SEM EXCEÇÕES**: Toda conclusão de etapa do plano DEVE ser rastreada com atualizações de checkbox
+
+### Sistema de Rastreamento de Checkboxes em Dois Níveis
+- **Nível do Plano**: Rastrear progresso detalhado de execução dentro de cada estágio
+- **Nível do Estágio**: Rastrear progresso geral do workflow em aidlc-state.md
+- **Atualizar imediatamente**: Todas as atualizações de progresso na MESMA interação em que o trabalho é concluído
+
+## Requisitos de Registro de Prompts
+- **OBRIGATÓRIO**: Registrar CADA entrada do usuário (prompts, perguntas, respostas) com timestamp em audit.md
+- **OBRIGATÓRIO**: Capturar a ENTRADA BRUTA COMPLETA do usuário exatamente como fornecida (nunca resumir)
+- **OBRIGATÓRIO**: Registrar cada prompt de aprovação com timestamp antes de perguntar ao usuário
+- **OBRIGATÓRIO**: Registrar cada resposta do usuário com timestamp após recebê-la
+- **CRÍTICO**: SEMPRE acrescente mudanças ao EDITAR o arquivo audit.md, NUNCA use ferramentas e comandos que sobrescrevam completamente seu conteúdo
+- **CRÍTICO**: NUNCA use ferramentas e comandos de escrita de arquivo que sobrescrevam todo o conteúdo de audit.md, pois isso causa duplicação
+- Use formato ISO 8601 para timestamps (YYYY-MM-DDTHH:MM:SSZ)
+- Inclua contexto do estágio para cada entrada
+
+### Formato do Log de Auditoria:
+```markdown
+## [Stage Name or Interaction Type]
+**Timestamp**: [ISO timestamp]
+**User Input**: "[Complete raw user input - never summarized]"
+**AI Response**: "[AI's response or action taken]"
+**Context**: [Stage, action, or decision made]
+
+---
+```
+
+### Uso Correto de Ferramentas para audit.md
+
+✅ CORRETO:
+
+1. Ler o arquivo audit.md
+2. Acrescentar/Editar o arquivo para fazer as mudanças
+
+❌ ERRADO:
+
+1. Ler o arquivo audit.md
+2. Sobrescrever completamente o audit.md com o conteúdo do que você leu, mais as novas mudanças que deseja adicionar
+
+## Estrutura de Diretórios
+
+```text
+<WORKSPACE-ROOT>/                   # ⚠️ APPLICATION CODE HERE
+├── [project-specific structure]    # Varies by project (see code-generation.md)
+│
+├── aidlc-docs/                     # 📄 DOCUMENTATION ONLY
+│   ├── inception/                  # 🔵 INCEPTION PHASE
+│   │   ├── plans/
+│   │   ├── reverse-engineering/    # Brownfield only
+│   │   ├── requirements/
+│   │   ├── user-stories/
+│   │   └── application-design/
+│   ├── construction/               # 🟢 CONSTRUCTION PHASE
+│   │   ├── plans/
+│   │   ├── {unit-name}/
+│   │   │   ├── functional-design/
+│   │   │   ├── nfr-requirements/
+│   │   │   ├── nfr-design/
+│   │   │   ├── infrastructure-design/
+│   │   │   └── code/               # Markdown summaries only
+│   │   └── build-and-test/
+│   ├── operations/                 # 🟡 OPERATIONS PHASE (placeholder)
+│   ├── aidlc-state.md
+│   └── audit.md
+```
+
+**REGRA CRÍTICA**:
+- Código da aplicação: Raiz do workspace (NUNCA em aidlc-docs/)
+- Documentação: apenas aidlc-docs/
+- Estrutura do projeto: Veja code-generation.md para padrões por tipo de projeto
