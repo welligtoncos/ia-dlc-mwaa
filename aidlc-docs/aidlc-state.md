@@ -4,8 +4,9 @@
 - **Project Type**: Greenfield
 - **Project Name**: ia-dlc-mwaa
 - **Start Date**: 2026-08-21T21:22:09Z
-- **Current Stage**: INCEPTION - Units Generation (Awaiting Approval)
-- **Current Phase**: INCEPTION
+- **Current Stage**: CONSTRUCTION - U1 Code Generation (Awaiting Approval)
+- **Current Phase**: CONSTRUCTION
+- **Current Unit**: U1 Foundation
 - **Workspace Root**: d:\projetos-ia-aws\ia-dlc-mwaa
 
 ## Workspace State
@@ -24,9 +25,9 @@
 | Property-Based Testing | No | Requirements Analysis |
 
 ## Execution Plan Summary
-- **Execute**: Application Design, Units Generation, Functional Design, NFR Requirements, NFR Design, Infrastructure Design, Code Generation, Build and Test
-- **Skip**: Reverse Engineering (done), Operations (placeholder)
-- **Completed**: Workspace Detection, Requirements Analysis, User Stories, Workflow Planning
+- **Execute**: Functional Design, NFR Requirements, NFR Design, Infrastructure Design, Code Generation, Build and Test (per unit U1→U2∥U3→U4)
+- **Skip**: Reverse Engineering, Operations (placeholder)
+- **INCEPTION**: COMPLETE
 
 ## Stage Progress
 ### INCEPTION PHASE
@@ -36,20 +37,28 @@
 - [x] User Stories
 - [x] Workflow Planning
 - [x] Application Design
-- [ ] Units Generation - EXECUTE (generated - awaiting approval)
+- [x] Units Generation
 
 ### CONSTRUCTION PHASE
-- [ ] Functional Design - EXECUTE
-- [ ] NFR Requirements - EXECUTE
-- [ ] NFR Design - EXECUTE
-- [ ] Infrastructure Design - EXECUTE
-- [ ] Code Generation - EXECUTE
-- [ ] Build and Test - EXECUTE
+#### Unit U1 Foundation (in progress)
+- [x] Functional Design
+- [x] NFR Requirements
+- [x] NFR Design
+- [x] Infrastructure Design
+- [ ] Code Generation (generated - awaiting approval)
+- [ ] Build and Test (unit-level as applicable)
+
+#### Units pending
+- [ ] U2 Data Lake and Governance
+- [ ] U3 Compute Executors
+- [ ] U4 Orchestration and Notify
+- [ ] Build and Test (platform E2E)
 
 ### OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Next Stage**: CONSTRUCTION (after Units Generation approval)
-- **Status**: Waiting for Units Generation artifact approval
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Unit**: U1 Foundation
+- **Next Stage**: Continue U1 loop or Build and Test after code approval (then U2/U3)
+- **Status**: Waiting for U1 Code Generation artifact approval
