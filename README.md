@@ -9,11 +9,11 @@ Provisiona:
 - **S3 Gateway VPC Endpoint**
 - Bucket de artefatos Airflow (versioning + BPA + SSE-S3)
 - IAM execution role (least privilege base)
-- Ambiente MWAA `mw1.small` (Airflow default `2.11.2`, UI **PUBLIC**)
+- Ambiente MWAA `mw1.small` (Airflow default `2.11.2`, UI **PUBLIC_ONLY**)
 
 ## Avisos de segurança / custo
 
-- UI MWAA **PUBLIC** é decisão de PoC — não use assim em produção.
+- UI MWAA **PUBLIC_ONLY** é decisão de PoC — não use assim em produção.
 - **1 NAT** é SPOF consciente (custo).
 - State Terraform é **local** — faça backup do `terraform.tfstate`.
 - Headroom futuro documentado: `mw1.medium` / 2 NAT (não implementado).

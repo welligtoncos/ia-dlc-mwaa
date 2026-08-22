@@ -52,7 +52,7 @@ output "mwaa_environment_arn" {
 }
 
 output "mwaa_webserver_url" {
-  description = "URL da UI Airflow (PUBLIC)"
+  description = "URL da UI Airflow (PUBLIC_ONLY)"
   value       = module.mwaa.webserver_url
 }
 

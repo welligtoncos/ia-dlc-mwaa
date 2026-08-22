@@ -26,7 +26,7 @@
 |---|---|
 | BR-MWAA-01 | `environment_class` = `mw1.small`. |
 | BR-MWAA-02 | `airflow_version` default = `2.11.2` (override por variável se conta não tiver a versão). |
-| BR-MWAA-03 | `webserver_access_mode` = `PUBLIC` (PoC consciente). |
+| BR-MWAA-03 | `webserver_access_mode` = `PUBLIC_ONLY` (PoC consciente; valor da API AWS). |
 | BR-MWAA-04 | Critério de pronto = status **AVAILABLE** (sem exigir smoke HTTP 200). |
 | BR-MWAA-05 | Logging CloudWatch habilitado para scheduler, webserver, worker e DAG processing. |
 | BR-MWAA-06 | Lifecycle deve ignorar mudanças de `requirements_s3_object_version` e `plugins_s3_object_version`. |

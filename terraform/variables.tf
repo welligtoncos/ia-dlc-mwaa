@@ -51,12 +51,12 @@ variable "environment_class" {
 
 variable "webserver_access_mode" {
   type        = string
-  description = "PUBLIC para PoC; PRIVATE_ONLY exige VPN/bastion."
-  default     = "PUBLIC"
+  description = "API MWAA: PUBLIC_ONLY (PoC) ou PRIVATE_ONLY (exige VPN/bastion)."
+  default     = "PUBLIC_ONLY"
 
   validation {
-    condition     = contains(["PUBLIC", "PRIVATE_ONLY"], var.webserver_access_mode)
-    error_message = "webserver_access_mode must be PUBLIC or PRIVATE_ONLY."
+    condition     = contains(["PUBLIC_ONLY", "PRIVATE_ONLY"], var.webserver_access_mode)
+    error_message = "webserver_access_mode must be PUBLIC_ONLY or PRIVATE_ONLY."
   }
 }
 
