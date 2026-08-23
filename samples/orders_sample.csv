@@ -1,0 +1,6 @@
+order_id,customer_id,amount,currency,status
+1001,C-001,49.90,BRL,paid
+1002,C-002,120.00,BRL,paid
+1003,C-003,15.50,BRL,pending
+1004,C-001,80.00,BRL,paid
+1005,C-004,200.00,BRL,cancelled

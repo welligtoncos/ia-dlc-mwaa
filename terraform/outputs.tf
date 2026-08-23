@@ -60,3 +60,60 @@ output "mwaa_execution_role_arn" {
   description = "Execution role do MWAA (U2–U4 anexam policies adicionais)"
   value       = module.identity.execution_role_arn
 }
+
+# --- U2 outputs (contrato shared) ---
+
+output "data_lake_bucket_name" {
+  description = "Bucket do data lake (raw/ + processed/)"
+  value       = module.data_lake.data_bucket_name
+}
+
+output "data_lake_bucket_arn" {
+  description = "ARN do bucket do data lake"
+  value       = module.data_lake.data_bucket_arn
+}
+
+output "athena_results_bucket_name" {
+  description = "Bucket de resultados Athena (lifecycle 7d)"
+  value       = module.data_lake.athena_results_bucket_name
+}
+
+output "athena_results_bucket_arn" {
+  description = "ARN do bucket de resultados Athena"
+  value       = module.data_lake.athena_results_bucket_arn
+}
+
+output "glue_database_name" {
+  description = "Glue Catalog database"
+  value       = module.glue_catalog.database_name
+}
+
+output "raw_crawler_name" {
+  description = "Crawler raw (on-demand)"
+  value       = module.glue_catalog.raw_crawler_name
+}
+
+output "processed_crawler_name" {
+  description = "Crawler processed (on-demand)"
+  value       = module.glue_catalog.processed_crawler_name
+}
+
+output "glue_service_role_arn" {
+  description = "IAM role dos crawlers Glue"
+  value       = module.glue_catalog.glue_service_role_arn
+}
+
+output "athena_workgroup_name" {
+  description = "Athena workgroup (enforce → results bucket)"
+  value       = module.athena.workgroup_name
+}
+
+output "lf_tag_classification_key" {
+  description = "LF-Tag Classification"
+  value       = module.lake_formation.lf_tag_classification_key
+}
+
+output "lf_tag_project_key" {
+  description = "LF-Tag Project"
+  value       = module.lake_formation.lf_tag_project_key
+}

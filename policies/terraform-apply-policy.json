@@ -131,7 +131,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "FutureU2GlueCatalogLakeFormationAthena",
+      "Sid": "U2GlueCatalogLakeFormationAthena",
       "Effect": "Allow",
       "Action": [
         "glue:*Database*",

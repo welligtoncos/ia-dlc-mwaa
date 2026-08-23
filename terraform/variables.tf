@@ -65,3 +65,15 @@ variable "additional_tags" {
   description = "Tags extras mescladas às tags padrão."
   default     = {}
 }
+
+variable "glue_database_name" {
+  type        = string
+  description = "Override opcional do Glue Database (default: {project}_{env}_lake)."
+  default     = null
+}
+
+variable "athena_workgroup_name" {
+  type        = string
+  description = "Override opcional do Athena workgroup (default: {project}-{env}-dev)."
+  default     = null
+}
