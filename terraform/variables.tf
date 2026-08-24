@@ -77,3 +77,33 @@ variable "athena_workgroup_name" {
   description = "Override opcional do Athena workgroup (default: {project}-{env}-dev)."
   default     = null
 }
+
+variable "lambda_memory_mb" {
+  type        = number
+  description = "Memória da Lambda marker (PoC). Headroom: aumentar via var."
+  default     = 256
+}
+
+variable "glue_worker_type" {
+  type        = string
+  description = "Tipo de worker Glue. Default G.1X."
+  default     = "G.1X"
+}
+
+variable "glue_number_of_workers" {
+  type        = number
+  description = "Número de workers Glue. Default 2 (PoC)."
+  default     = 2
+}
+
+variable "ecs_cpu" {
+  type        = string
+  description = "CPU Fargate (unidades). Default 256."
+  default     = "256"
+}
+
+variable "ecs_memory" {
+  type        = string
+  description = "Memória Fargate (MiB). Default 512."
+  default     = "512"
+}

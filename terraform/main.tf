@@ -194,3 +194,115 @@ resource "aws_iam_role_policy" "mwaa_lake_access" {
   role   = module.identity.execution_role_name
   policy = data.aws_iam_policy_document.mwaa_lake_access.json
 }
+
+# --- U3 Compute Executors ---
+
+module "lambda_executor" {
+  source = "./modules/lambda_executor"
+
+  name_prefix           = local.name_prefix
+  function_name         = "${local.name_prefix}lambda-marker"
+  data_lake_bucket_name = module.data_lake.data_bucket_name
+  data_lake_bucket_arn  = module.data_lake.data_bucket_arn
+  memory_size           = var.lambda_memory_mb
+  timeout_seconds       = 60
+  source_dir            = "${path.module}/../src/lambda_marker"
+}
+
+module "glue_job" {
+  source = "./modules/glue_job"
+
+  name_prefix           = local.name_prefix
+  job_name              = "${local.name_prefix}glue-passthrough"
+  artifact_bucket_name  = module.artifact_store.bucket_name
+  artifact_bucket_arn   = module.artifact_store.bucket_arn
+  data_lake_bucket_name = module.data_lake.data_bucket_name
+  data_lake_bucket_arn  = module.data_lake.data_bucket_arn
+  script_source_path    = "${path.module}/../src/glue/glue_passthrough.py"
+  worker_type           = var.glue_worker_type
+  number_of_workers     = var.glue_number_of_workers
+  aws_region            = var.aws_region
+}
+
+module "ecs_executor" {
+  source = "./modules/ecs_executor"
+
+  name_prefix           = local.name_prefix
+  cluster_name          = "${local.name_prefix}ecs-cluster"
+  vpc_id                = module.network.vpc_id
+  private_subnet_ids    = module.network.private_subnet_ids
+  data_lake_bucket_name = module.data_lake.data_bucket_name
+  data_lake_bucket_arn  = module.data_lake.data_bucket_arn
+  aws_region            = var.aws_region
+  cpu                   = var.ecs_cpu
+  memory                = var.ecs_memory
+}
+
+# Policy aditiva MWAA — Invoke Lambda / Start Glue / Run ECS + PassRole (U3).
+data "aws_iam_policy_document" "mwaa_compute_access" {
+  statement {
+    sid    = "InvokeLambdaMarker"
+    effect = "Allow"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [module.lambda_executor.function_arn]
+  }
+
+  statement {
+    sid    = "GlueJobControl"
+    effect = "Allow"
+    actions = [
+      "glue:StartJobRun",
+      "glue:GetJobRun",
+      "glue:GetJobRuns",
+      "glue:BatchStopJobRun",
+      "glue:GetJob"
+    ]
+    resources = [
+      "arn:aws:glue:${var.aws_region}:*:job/${module.glue_job.job_name}",
+    ]
+  }
+
+  statement {
+    sid    = "EcsRunTask"
+    effect = "Allow"
+    actions = [
+      "ecs:RunTask",
+      "ecs:DescribeTasks",
+      "ecs:StopTask",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DescribeClusters"
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid     = "PassComputeRoles"
+    effect  = "Allow"
+    actions = ["iam:PassRole"]
+    resources = [
+      module.glue_job.role_arn,
+      module.ecs_executor.execution_role_arn,
+      module.ecs_executor.task_role_arn,
+    ]
+  }
+
+  statement {
+    sid    = "EcsNetworkDescribe"
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeVpcs",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeNetworkInterfaces"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "mwaa_compute_access" {
+  name   = "${local.name_prefix}mwaa-compute-access"
+  role   = module.identity.execution_role_name
+  policy = data.aws_iam_policy_document.mwaa_compute_access.json
+}

@@ -117,3 +117,60 @@ output "lf_tag_project_key" {
   description = "LF-Tag Project"
   value       = module.lake_formation.lf_tag_project_key
 }
+
+# --- U3 outputs ---
+
+output "lambda_function_name" {
+  description = "Nome da Lambda marker"
+  value       = module.lambda_executor.function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN da Lambda marker"
+  value       = module.lambda_executor.function_arn
+}
+
+output "glue_job_name" {
+  description = "Nome do Glue Job passthrough"
+  value       = module.glue_job.job_name
+}
+
+output "ecs_cluster_arn" {
+  description = "ARN do cluster ECS"
+  value       = module.ecs_executor.cluster_arn
+}
+
+output "ecs_cluster_name" {
+  description = "Nome do cluster ECS"
+  value       = module.ecs_executor.cluster_name
+}
+
+output "ecs_task_definition_arn" {
+  description = "ARN da task definition Fargate marker"
+  value       = module.ecs_executor.task_definition_arn
+}
+
+output "ecs_security_group_id" {
+  description = "SG das tasks ECS U3"
+  value       = module.ecs_executor.security_group_id
+}
+
+output "lambda_role_arn" {
+  description = "IAM role da Lambda"
+  value       = module.lambda_executor.role_arn
+}
+
+output "glue_job_role_arn" {
+  description = "IAM role do Glue Job"
+  value       = module.glue_job.role_arn
+}
+
+output "ecs_task_role_arn" {
+  description = "IAM task role ECS"
+  value       = module.ecs_executor.task_role_arn
+}
+
+output "ecs_execution_role_arn" {
+  description = "IAM execution role ECS"
+  value       = module.ecs_executor.execution_role_arn
+}

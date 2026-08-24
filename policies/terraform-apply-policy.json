@@ -155,7 +155,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "FutureU3LambdaEcs",
+      "Sid": "U3LambdaEcs",
       "Effect": "Allow",
       "Action": [
         "lambda:CreateFunction",

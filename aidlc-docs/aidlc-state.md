@@ -4,9 +4,9 @@
 - **Project Type**: Greenfield
 - **Project Name**: ia-dlc-mwaa
 - **Start Date**: 2026-08-21T21:22:09Z
-- **Current Stage**: CONSTRUCTION - U2 Code Generation (Awaiting Approval)
+- **Current Stage**: CONSTRUCTION - U3 Code Generation (Awaiting Approval)
 - **Current Phase**: CONSTRUCTION
-- **Current Unit**: U2 Data Lake and Governance
+- **Current Unit**: U3 Compute Executors
 - **Workspace Root**: d:\projetos-ia-aws\ia-dlc-mwaa
 
 ## Workspace State
@@ -48,15 +48,20 @@
 - [x] Code Generation
 - [ ] Build and Test (unit-level deferred to platform / after more units)
 
-#### Unit U2 Data Lake and Governance (in progress)
+#### Unit U2 Data Lake and Governance
 - [x] Functional Design
 - [x] NFR Requirements
 - [x] NFR Design
 - [x] Infrastructure Design
-- [x] Code Generation (generated - awaiting approval)
+- [x] Code Generation
 
+#### Unit U3 Compute Executors (in progress)
+- [x] Functional Design
+- [x] NFR Requirements
+- [x] NFR Design
+- [x] Infrastructure Design
+- [ ] Code Generation (generated - awaiting approval)
 #### Units pending
-- [ ] U3 Compute Executors (can parallel with U2 after U1)
 - [ ] U4 Orchestration and Notify
 - [ ] Build and Test (platform E2E)
 
@@ -65,6 +70,6 @@
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U2 Data Lake and Governance
-- **Next Stage**: U3 Compute Executors (after U2 Code Generation approval)
-- **Status**: Waiting for U2 Code Generation approval
+- **Current Unit**: U3 Compute Executors
+- **Next Stage**: U4 Orchestration and Notify (after U3 Code Generation approval)
+- **Status**: Waiting for U3 Code Generation approval
