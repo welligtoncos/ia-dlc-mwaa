@@ -38,7 +38,54 @@ Desenvolvido com o workflow [AI-DLC](aidlc-docs/) (Inception → Construction). 
 | **Compute (U3)** | Lambda marker, Glue Job, ECS Fargate |
 | **E2E + notify (U4)** | DAG `lab_pipeline_e2e`, SNS, Airflow Variables |
 
-**Pipeline E2E:** Lambda → Glue ∥ ECS → Athena → SNS.
+**Pipeline E2E (referência):** Lambda → Glue ∥ ECS → Athena → SNS.
+
+---
+
+## O que você pode construir
+
+Sim — com esta stack dá para criar **pipelines batch de dados**, orquestrados no Airflow e executados nos blocos AWS abaixo.
+
+### Blocos disponíveis
+
+| Bloco | Uso em pipeline |
+|---|---|
+| **Airflow (EC2)** | Agendar, encadear tasks, retries, Variables, branches |
+| **S3 data lake** | Landing / raw / processed |
+| **Glue Catalog + Crawlers** | Descobrir schema e registrar tabelas |
+| **Athena** | SQL sobre o lake |
+| **Lake Formation** | Controle de acesso por LF-Tags (lab) |
+| **Lambda** | Jobs leves / triggers / markers |
+| **Glue Job** | ETL Spark (batch) |
+| **ECS Fargate** | Containers (scripts, transformações, tools) |
+| **SNS** | Alertas de sucesso / falha |
+
+### Possibilidades práticas
+
+1. **Ingestão batch** — arquivo → S3 raw → Crawler → Athena/Glue Job → processed → SNS  
+2. **ETL orquestrado** — Lambda (kickoff) → Glue Job ∥ ECS → Athena (validação) → SNS *(padrão do `lab_pipeline_e2e`)*  
+3. **Pipelines só SQL** — seed/crawler → Athena (`CTAS` / queries de qualidade) → SNS  
+4. **Jobs containerizados** — ECS Fargate para Python, validações, exports  
+5. **Microtarefas serverless** — Lambda para validar arquivo, marcar evento, chamar API, limpar paths  
+6. **Multi-step com branch** — Airflow escolhe caminho (ex.: há dados → SELECT; senão → skip)  
+7. **Agendamento** — cron via `schedule` do DAG ou Variable `lab_e2e_schedule`
+
+### Como criar um pipeline novo
+
+1. Escreva o DAG em `dags/*.py` (operators Amazon + Python/boto3)  
+2. `.\scripts\sync-dags.ps1`  
+3. Configure Airflow Variables (Lambda / Glue / ECS / SNS / buckets)  
+4. UI → unpause + Trigger  
+5. Monitore logs Airflow + mensagem SNS  
+
+### Limites deste laboratório
+
+- Sem streaming (Kinesis / MSK / Flink)  
+- MWAA gerenciado desligado por padrão (`orchestrator_mode=ec2`)  
+- Sem CI/CD de DAG, vault de secrets ou HA do Airflow  
+- Escopo IAM limitado à instance role e policies U2/U3 já anexadas  
+
+Em resumo: pipelines **batch** (ingest → transform → query → notify) com liberdade para recombinar Lambda, Glue, ECS e Athena — o DAG E2E é o template.
 
 ---
 
