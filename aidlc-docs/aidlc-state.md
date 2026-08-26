@@ -1,75 +1,57 @@
 # AI-DLC State Tracking
 
 ## Project Information
-- **Project Type**: Greenfield
+- **Project Type**: Brownfield (change on existing lab)
 - **Project Name**: ia-dlc-mwaa
 - **Start Date**: 2026-08-21T21:22:09Z
-- **Current Stage**: CONSTRUCTION - U3 Code Generation (Awaiting Approval)
-- **Current Phase**: CONSTRUCTION
-- **Current Unit**: U3 Compute Executors
+- **Current Stage**: OPERATIONS (placeholder acknowledged — U4 closed)
+- **Current Phase**: OPERATIONS
 - **Workspace Root**: d:\projetos-ia-aws\ia-dlc-mwaa
-
-## Workspace State
-- **Existing Code**: Yes (U1 + U2 Terraform)
-- **Reverse Engineering Needed**: No
-
-## Code Location Rules
-- **Application Code**: Workspace root (NEVER in aidlc-docs/)
-- **Documentation**: aidlc-docs/ only
 
 ## Extension Configuration
 | Extension | Enabled | Decided At |
 |---|---|---|
-| Security Baseline | No | Requirements Analysis |
-| Resiliency Baseline | No | Requirements Analysis |
-| Property-Based Testing | No | Requirements Analysis |
+| Security Baseline | No | U4 Requirements Analysis |
 
-## Execution Plan Summary
-- **Execute**: Functional Design, NFR Requirements, NFR Design, Infrastructure Design, Code Generation (per unit)
-- **Skip**: Reverse Engineering, Operations (placeholder)
-- **INCEPTION**: COMPLETE
+## Execution Plan Summary (U4)
+- **Stages executed**: FD → NFRA → NFRD → ID → CG → BT
+- **Skipped**: User Stories, Application Design, Units Generation
+- **Plan file**: `aidlc-docs/inception/plans/u4-orchestration-notify-execution-plan.md`
+- **Status**: **COMPLETE**
 
 ## Stage Progress
-### INCEPTION PHASE
-- [x] Workspace Detection
-- [x] Reverse Engineering (skipped - greenfield)
-- [x] Requirements Analysis
-- [x] User Stories
-- [x] Workflow Planning
-- [x] Application Design
-- [x] Units Generation
 
-### CONSTRUCTION PHASE
-#### Unit U1 Foundation
-- [x] Functional Design
-- [x] NFR Requirements
-- [x] NFR Design
-- [x] Infrastructure Design
-- [x] Code Generation
-- [ ] Build and Test (unit-level deferred to platform / after more units)
+### INCEPTION
+- [x] Workspace Detection (global + U4 resume 2026-08-25)
+- [x] Requirements (EC2 pivot)
+- [x] Workflow Planning (global)
+- [x] Application Design (global)
+- [x] User Stories (global — US-05..US-09 cobrem U4)
+- [x] Units Generation (global — U4 definida)
+- [x] U4 Requirements Analysis (approved)
+- [x] U4 Workflow Planning (approved)
+- [x] U4 Application Design — SKIP
+- [x] U4 Units Generation — SKIP
 
-#### Unit U2 Data Lake and Governance
-- [x] Functional Design
-- [x] NFR Requirements
-- [x] NFR Design
-- [x] Infrastructure Design
-- [x] Code Generation
+### CONSTRUCTION
+- [x] U1-orchestrator-ec2 — Functional Design
+- [x] U1-orchestrator-ec2 — NFR Requirements
+- [x] U1-orchestrator-ec2 — NFR Design
+- [x] U1-orchestrator-ec2 — Infrastructure Design
+- [x] U1-orchestrator-ec2 — Code Generation
+- [x] Build and Test (approved — U1-EC2)
+- [x] U2/U3 code (prior sessions)
+- [x] U4 Functional Design (approved)
+- [x] U4 NFR Requirements (approved)
+- [x] U4 NFR Design (approved)
+- [x] U4 Infrastructure Design (approved)
+- [x] U4 Code Generation (approved)
+- [x] U4 Build and Test (approved)
 
-#### Unit U3 Compute Executors (in progress)
-- [x] Functional Design
-- [x] NFR Requirements
-- [x] NFR Design
-- [x] Infrastructure Design
-- [ ] Code Generation (generated - awaiting approval)
-#### Units pending
-- [ ] U4 Orchestration and Notify
-- [ ] Build and Test (platform E2E)
-
-### OPERATIONS PHASE
-- [ ] Operations - PLACEHOLDER
+### OPERATIONS
+- [x] Operations placeholder (manual runbooks — `docs/lab-guide.md` + `operations-placeholder.md`)
 
 ## Current Status
-- **Lifecycle Phase**: CONSTRUCTION
-- **Current Unit**: U3 Compute Executors
-- **Next Stage**: U4 Orchestration and Notify (after U3 Code Generation approval)
-- **Status**: Waiting for U3 Code Generation approval
+- **Platform units U1–U4:** Construction **closed**
+- **Operator runbooks:** `docs/lab-guide.md` (§6.1 E2E) + `aidlc-docs/operations/operations-placeholder.md`
+- **Pending runtime (operator):** `apply` U4 → sync → set variables → trigger `lab_pipeline_e2e` → verify SNS → stop EC2

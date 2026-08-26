@@ -14,6 +14,9 @@ locals {
     var.athena_workgroup_name,
     "${trimsuffix(local.name_prefix, "-")}-dev"
   )
+  airflow_ssm_password_param = "/${local.name_prefix}airflow/ui-password"
+  orchestrator_role_arn      = var.orchestrator_mode == "ec2" ? module.airflow_ec2_identity[0].role_arn : module.identity[0].execution_role_arn
+  orchestrator_role_name     = var.orchestrator_mode == "ec2" ? module.airflow_ec2_identity[0].role_name : module.identity[0].execution_role_name
 }
 
 # random_id: S3 bucket names são globais; sufixo evita colisão sem hardcode de conta.
@@ -40,6 +43,7 @@ module "artifact_store" {
 }
 
 module "identity" {
+  count  = var.orchestrator_mode == "mwaa" ? 1 : 0
   source = "./modules/identity"
 
   name_prefix         = local.name_prefix
@@ -48,7 +52,18 @@ module "identity" {
   # account id via data source no módulo
 }
 
+module "airflow_ec2_identity" {
+  count  = var.orchestrator_mode == "ec2" ? 1 : 0
+  source = "./modules/airflow_ec2_identity"
+
+  name_prefix                 = local.name_prefix
+  aws_region                  = var.aws_region
+  artifact_bucket_arn         = module.artifact_store.bucket_arn
+  ssm_password_parameter_name = local.airflow_ssm_password_param
+}
+
 module "mwaa" {
+  count  = var.orchestrator_mode == "mwaa" ? 1 : 0
   source = "./modules/mwaa"
 
   name_prefix           = local.name_prefix
@@ -57,9 +72,27 @@ module "mwaa" {
   environment_class     = var.environment_class
   webserver_access_mode = var.webserver_access_mode
   source_bucket_arn     = module.artifact_store.bucket_arn
-  execution_role_arn    = module.identity.execution_role_arn
+  execution_role_arn    = module.identity[0].execution_role_arn
   subnet_ids            = module.network.private_subnet_ids
   security_group_ids    = [module.network.mwaa_security_group_id]
+}
+
+module "airflow_ec2" {
+  count  = var.orchestrator_mode == "ec2" ? 1 : 0
+  source = "./modules/airflow_ec2"
+
+  name_prefix                 = local.name_prefix
+  aws_region                  = var.aws_region
+  environment                 = var.environment
+  project_name                = var.project_name
+  artifact_bucket_name        = module.artifact_store.bucket_name
+  instance_type               = var.airflow_instance_type
+  operator_cidr               = var.operator_cidr
+  subnet_id                   = module.network.public_subnet_id
+  vpc_id                      = module.network.vpc_id
+  instance_profile_name       = module.airflow_ec2_identity[0].instance_profile_name
+  airflow_image_digest        = var.airflow_image_digest
+  ssm_password_parameter_name = local.airflow_ssm_password_param
 }
 
 # --- U2 Data Lake and Governance ---
@@ -90,7 +123,7 @@ module "lake_formation" {
   data_bucket_arn         = module.data_lake.data_bucket_arn
   glue_database_name      = module.glue_catalog.database_name
   glue_role_arn           = module.glue_catalog.glue_service_role_arn
-  mwaa_execution_role_arn = module.identity.execution_role_arn
+  mwaa_execution_role_arn = local.orchestrator_role_arn
   project_tag_value       = "ia-dlc-mwaa"
 }
 
@@ -190,8 +223,8 @@ data "aws_iam_policy_document" "mwaa_lake_access" {
 }
 
 resource "aws_iam_role_policy" "mwaa_lake_access" {
-  name   = "${local.name_prefix}mwaa-lake-access"
-  role   = module.identity.execution_role_name
+  name   = "${local.name_prefix}orchestrator-lake-access"
+  role   = local.orchestrator_role_name
   policy = data.aws_iam_policy_document.mwaa_lake_access.json
 }
 
@@ -302,7 +335,39 @@ data "aws_iam_policy_document" "mwaa_compute_access" {
 }
 
 resource "aws_iam_role_policy" "mwaa_compute_access" {
-  name   = "${local.name_prefix}mwaa-compute-access"
-  role   = module.identity.execution_role_name
+  name   = "${local.name_prefix}orchestrator-compute-access"
+  role   = local.orchestrator_role_name
   policy = data.aws_iam_policy_document.mwaa_compute_access.json
+}
+
+# --- U4 Orchestration and Notify ---
+
+module "sns" {
+  source = "./modules/sns"
+
+  name_prefix        = local.name_prefix
+  topic_name         = "${local.name_prefix}pipeline-status"
+  publisher_role_arn = local.orchestrator_role_arn
+  notification_email = var.sns_notification_email
+  tags = {
+    Unit = "u4"
+  }
+}
+
+# Identity-side Publish (topic policy is the other half of dual-control).
+data "aws_iam_policy_document" "orchestrator_sns_publish" {
+  statement {
+    sid    = "PublishPipelineStatus"
+    effect = "Allow"
+    actions = [
+      "sns:Publish"
+    ]
+    resources = [module.sns.topic_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "orchestrator_sns_publish" {
+  name   = "${local.name_prefix}orchestrator-sns-publish"
+  role   = local.orchestrator_role_name
+  policy = data.aws_iam_policy_document.orchestrator_sns_publish.json
 }

@@ -1,0 +1,18 @@
+[Unit]
+Description=Airflow Docker Compose stack
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/airflow-ec2
+EnvironmentFile=/opt/airflow-ec2/.env
+ExecStart=/usr/bin/docker compose --env-file /opt/airflow-ec2/.env up -d
+ExecStop=/usr/bin/docker compose --env-file /opt/airflow-ec2/.env down
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

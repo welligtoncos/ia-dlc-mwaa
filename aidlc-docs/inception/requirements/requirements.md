@@ -1,5 +1,7 @@
 # Requirements Document
 
+> **Amendment (2026-08-24):** Orquestrador default alterado de MWAA gerenciado para **EC2 + Docker Compose** (Free Tier bloqueia MWAA). Detalhes e FRs da mudança: [`ec2-airflow-orchestrator-requirements.md`](./ec2-airflow-orchestrator-requirements.md). Variável `orchestrator_mode` (`ec2` default | `mwaa`). U2/U3/U4 permanecem; FR-01 abaixo aplica-se quando `orchestrator_mode=mwaa`.
+
 ## Intent Analysis Summary
 
 | Field | Value |

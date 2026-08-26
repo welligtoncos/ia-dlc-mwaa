@@ -3,23 +3,21 @@
 **Projeto**: ia-dlc-mwaa  
 **Decomposição**: 4 unidades (módulos lógicos; um serviço Terraform implantável)  
 **Deploy**: 1 root · 1 state local · 1 apply  
-**Dependências**: U1 → (U2 ∥ U3) → U4
+**Dependências**: U1 → (U2 ∥ U3) → U4  
 
-## Code Organization Strategy (Greenfield)
+> **Amendment**: U1 default entrega **OrchestratorEC2** (`modules/airflow_ec2`). MWAA só se `orchestrator_mode=mwaa`.
+
+## Code Organization Strategy
 
 ```
 ia-dlc-mwaa/
   terraform/
-    versions.tf
-    providers.tf
-    variables.tf
-    outputs.tf
-    main.tf                 # wiring dos modules
     modules/
       network/              # U1
       artifact_store/       # U1
-      mwaa/                 # U1
-      identity/             # U1 (+ grants cross-service U3)
+      airflow_ec2/          # U1 (default orchestrator)
+      mwaa/                 # U1 (optional mode=mwaa)
+      identity/             # U1 (+ EC2 role / optional MWAA role)
       data_lake/            # U2
       glue_catalog/         # U2
       lake_formation/       # U2
@@ -29,14 +27,9 @@ ia-dlc-mwaa/
       ecs_executor/         # U3
       sns/                  # U4
   dags/                     # U4 PipelineApp
-  requirements.txt          # U4
-  policies/
-    terraform-apply-policy.json   # U1 / US-04
-  README.md
-  aidlc-docs/               # documentação AI-DLC only
+  scripts/                  # sync-dags, airflow-ec2-start/stop, apply
+  aidlc-docs/
 ```
-
-**Regra**: código de aplicação/IaC nunca dentro de `aidlc-docs/`.
 
 ---
 
@@ -47,27 +40,21 @@ ia-dlc-mwaa/
 | **Tipo** | Módulo lógico / foundation package |
 | **Bounded context** | Platform |
 | **Owner lógico** | P1 Platform Engineer |
-| **Componentes** | NetworkFabric, ArtifactStore, OrchestratorMWAA, IdentityPlane (base MWAA + apply policy) |
-| **Responsabilidade** | Rede mínima, bucket de artefatos Airflow, ambiente MWAA `mw1.small`, IAM base least privilege, policy documentada do `terraform apply` |
-| **Entregáveis** | `modules/network`, `artifact_store`, `mwaa`, `identity` (+ `policies/terraform-apply-policy.json`) |
+| **Componentes** | NetworkFabric, ArtifactStore, **OrchestratorEC2** (default), OrchestratorMWAA (optional), IdentityPlane, DagSyncAgent |
+| **Responsabilidade** | Rede, bucket artefatos (+ compose package), EC2 Airflow Compose **ou** MWAA conforme mode, IAM principal ativo, apply policy |
+| **Entregáveis** | `modules/network`, `artifact_store`, **`airflow_ec2`**, `mwaa` (gated), `identity`, scripts start/stop |
 | **Stories** | US-01, US-02, US-03, US-04, parte US-10 |
-| **Done when** | MWAA healthy, UI PUBLIC acessível, bucket pronto para sync, apply policy revisável |
+| **Done when (default ec2)** | EC2 running Compose; UI :8080 reachable from operator_cidr; SSM works; bucket ready for sync; instance role can call U2/U3 APIs |
+| **Done when (mode mwaa)** | MWAA healthy + UI PUBLIC_ONLY (conta com assinatura) |
+
+### U1-orchestrator-ec2 (delta Construction)
+Mesma U1; foco Construction desta mudança: módulo EC2, IAM EC2, SG, compose upload, scripts, conditional MWAA off.
 
 ---
 
 ## U2 — Data Lake and Governance
 
-| Campo | Valor |
-|---|---|
-| **Tipo** | Módulo lógico |
-| **Bounded context** | Governance / Lake |
-| **Owner lógico** | P3 Security/Governance |
-| **Componentes** | DataLakeStore, CatalogService, GovernancePlane, QueryService |
-| **Responsabilidade** | Lake S3 (raw/processed/athena-results), Glue DB/Crawler, Lake Formation + LF-Tags/grants, Athena workgroup |
-| **Entregáveis** | `modules/data_lake`, `glue_catalog`, `lake_formation`, `athena` |
-| **Stories** | US-08, US-09 (parte Athena) |
-| **Done when** | Location LF registrada, tags/grants mínimos, workgroup Athena com output no lake |
-| **Depende de** | U1 (tags/vars/provider; opcionalmente network só se endpoints futuros — não bloqueante para S3/Glue/Athena APIs) |
+(Inalterado em escopo.) Done when LF/Athena ok. Depende de U1 tags/vars.
 
 ---
 
@@ -75,15 +62,8 @@ ia-dlc-mwaa/
 
 | Campo | Valor |
 |---|---|
-| **Tipo** | Módulo lógico |
-| **Bounded context** | Compute |
-| **Owner lógico** | P2 Data Engineer |
-| **Componentes** | ServerlessExecutor, EtlExecutor, ContainerExecutor + grants MWAA→compute (IdentityPlane extensão) |
-| **Responsabilidade** | Lambda exemplo, Glue Job exemplo, ECS Fargate task exemplo; roles locais + permissões de invocação para MWAA |
-| **Entregáveis** | `modules/lambda_executor`, `glue_job`, `ecs_executor` (+ updates em `identity`) |
-| **Stories** | US-06, US-07, parte US-10 |
-| **Done when** | Três executors invocáveis pela execution role do MWAA com least privilege |
-| **Depende de** | U1 (MWAA role, network para ECS); pode paralelizar com U2 (lake paths via vars/outputs) |
+| **Done when** | Três executors invocáveis pela **role do orquestrador ativo** (EC2 default / MWAA se mode=mwaa) |
+| **Depende de** | U1 (orchestrator role, network para ECS) |
 
 ---
 
@@ -91,15 +71,8 @@ ia-dlc-mwaa/
 
 | Campo | Valor |
 |---|---|
-| **Tipo** | Módulo lógico + app code |
-| **Bounded context** | Orchestration |
-| **Owner lógico** | P2 Data Engineer |
-| **Componentes** | PipelineApp, NotifyService |
-| **Responsabilidade** | DAG E2E, requirements, SNS, docs de `aws s3 sync` e smoke test |
-| **Entregáveis** | `dags/`, `requirements.txt`, `modules/sns`, seções README (sync/apply/smoke) |
-| **Stories** | US-05, US-09 (parte SNS), fechamento E2E |
-| **Done when** | Após sync, DAG executa Lambda+Glue+ECS+Athena e publica SNS |
-| **Depende de** | U1 + U2 + U3 |
+| **Responsabilidade** | DAG E2E, SNS, docs sync + UI EC2 + smoke |
+| **Done when** | Após sync, DAG E2E no Airflow EC2 (ou MWAA) + SNS |
 
 ---
 
@@ -107,7 +80,7 @@ ia-dlc-mwaa/
 
 | ID | Name | Parallelizable with |
 |---|---|---|
-| U1 | Foundation | — (first) |
+| U1 | Foundation (+ orchestrator-ec2 delta) | — |
 | U2 | Data Lake and Governance | U3 (após U1) |
 | U3 | Compute Executors | U2 (após U1) |
 | U4 | Orchestration and Notify | — (last) |

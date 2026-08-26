@@ -1,47 +1,53 @@
 # Application Design (Consolidated)
 
 ## Summary
-Design lógico da plataforma de dados AWS orquestrada por MWAA para aprendizado E2E (escopo completo). Terraform em **root + modules**; serviços em modelo **híbrido** (capabilities TF + orchestration DAG); IAM **híbrido**; **GovernancePlane** separado; diagramas Mermaid+ASCII; methods cobrem ops TF e tasks do DAG.
+Design lógico da plataforma de dados AWS. **Default orchestrator**: EC2 `t3.medium` + Docker Compose Airflow 2.11.2 (Free Tier / custo controlado). MWAA permanece como modo opcional (`orchestrator_mode=mwaa`). Terraform root + modules; IAM híbrido; GovernancePlane separado.
 
 ## Architecture Decisions
 | Decision | Choice |
 |---|---|
 | TF layout | Root + `modules/*` |
 | Service model | Capability services + Pipeline orchestration |
-| IAM | Local executor roles + central cross-service policies |
+| IAM | Local executor roles + central orchestrator policies |
 | Lake Formation | Separate GovernancePlane |
-| MWAA | `mw1.small`, `airflow_version` default `2.11.2`, web `PUBLIC` |
-| DAG deploy | Outside Terraform (`aws s3 sync`) |
+| **Orchestrator default** | **OrchestratorEC2** — AL2023, Compose LocalExecutor + Postgres container, SSM-only, no EIP, UI :8080 + `operator_cidr` |
+| Orchestrator optional | OrchestratorMWAA `mw1.small` when `orchestrator_mode=mwaa` |
+| Module | `modules/airflow_ec2`; role `…-airflow-ec2-execution` |
+| Compose delivery | Upload to ArtifactStore; user_data pulls |
+| DAG deploy | `sync-dags.sh` → S3 → DagSyncAgent on EC2 |
 | State | Local (PoC) |
 
 ## Components
-Ver `components.md` — 13 componentes: NetworkFabric, ArtifactStore, DataLakeStore, OrchestratorMWAA, IdentityPlane, ServerlessExecutor, EtlExecutor, CatalogService, ContainerExecutor, GovernancePlane, QueryService, NotifyService, PipelineApp.
+Ver `components.md` — inclui **OrchestratorEC2**, **DagSyncAgent**; OrchestratorMWAA opcional.
 
 ## Methods
-Ver `component-methods.md` — operações de provisionamento por módulo + tasks do DAG (Lambda, Glue, ECS, Athena, SNS).
+Ver `component-methods.md` — EC2 bootstrap, SSM, sync, dual-mode IdentityPlane.
 
 ## Services
-Ver `services.md` — capability services mapeados 1:1 aos módulos; PipelineOrchestrationService como orquestrador.
+Ver `services.md` — Orchestration Runtime default EC2; MWAA optional.
 
 ## Dependencies
-Ver `component-dependency.md` — matriz, mermaid e ASCII.
+Ver `component-dependency.md` — matriz e diagramas modo ec2.
 
-## Mapping to User Stories
+## Mapping to User Stories (updated)
 | US | Primary components |
 |---|---|
 | US-01 | NetworkFabric |
-| US-02 | OrchestratorMWAA |
+| US-02 | **OrchestratorEC2** (default) / OrchestratorMWAA (optional) |
 | US-03 | ArtifactStore |
 | US-04 | IdentityPlane (apply policy) |
-| US-05 | PipelineApp + ArtifactStore |
+| US-05 | PipelineApp + ArtifactStore + DagSyncAgent |
 | US-06 | ServerlessExecutor + PipelineApp |
 | US-07 | EtlExecutor + ContainerExecutor + CatalogService |
 | US-08 | GovernancePlane + DataLakeStore |
 | US-09 | QueryService + NotifyService |
-| US-10 | IdentityPlane (+ all executor roles) |
+| US-10 | IdentityPlane (EC2 role default) |
 
 ## Mapping to Requirements
-FR-01..FR-14 cobertos pelos componentes acima; NFR least-privilege e tags padrão aplicados via IdentityPlane + convenção de módulos.
+Baseline FR-01..FR-14 + **FR-EC2-01..08** (`ec2-airflow-orchestrator-requirements.md`).
+
+## Units
+Ver `unit-of-work.md` — U1 delta inclui `airflow_ec2`; Units Generation skipped for this change.
 
 ## Next Stage
-Units Generation — decompor em U1 Foundation, U2 Lake/Governance, U3 Compute, U4 Orchestration/Notify (conforme execution-plan).
+**CONSTRUCTION** — Functional Design for unit **U1-orchestrator-ec2**.

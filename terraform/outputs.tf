@@ -31,6 +31,41 @@ output "mwaa_security_group_id" {
   value       = module.network.mwaa_security_group_id
 }
 
+output "orchestrator_mode" {
+  description = "Modo do orquestrador: ec2 ou mwaa"
+  value       = var.orchestrator_mode
+}
+
+output "orchestrator_role_arn" {
+  description = "Role IAM do orquestrador ativo (EC2 ou MWAA)"
+  value       = local.orchestrator_role_arn
+}
+
+output "airflow_ec2_instance_id" {
+  description = "Instance ID da EC2 Airflow (mode=ec2)"
+  value       = var.orchestrator_mode == "ec2" ? module.airflow_ec2[0].instance_id : null
+}
+
+output "airflow_ec2_public_ip" {
+  description = "IP público da EC2 Airflow (dinâmico; muda após stop/start)"
+  value       = var.orchestrator_mode == "ec2" ? module.airflow_ec2[0].public_ip : null
+}
+
+output "airflow_ui_url" {
+  description = "URL da UI Airflow na EC2 (mode=ec2)"
+  value       = var.orchestrator_mode == "ec2" ? module.airflow_ec2[0].ui_url : null
+}
+
+output "airflow_ec2_role_arn" {
+  description = "ARN da role EC2 Airflow (mode=ec2)"
+  value       = var.orchestrator_mode == "ec2" ? module.airflow_ec2_identity[0].role_arn : null
+}
+
+output "airflow_ui_password_ssm_param" {
+  description = "SSM Parameter com senha admin da UI (mode=ec2)"
+  value       = var.orchestrator_mode == "ec2" ? local.airflow_ssm_password_param : null
+}
+
 output "artifact_bucket_name" {
   description = "Bucket de DAGs/plugins/requirements"
   value       = module.artifact_store.bucket_name
@@ -42,23 +77,23 @@ output "artifact_bucket_arn" {
 }
 
 output "mwaa_environment_name" {
-  description = "Nome do ambiente MWAA"
-  value       = module.mwaa.environment_name
+  description = "Nome do ambiente MWAA (mode=mwaa)"
+  value       = var.orchestrator_mode == "mwaa" ? module.mwaa[0].environment_name : null
 }
 
 output "mwaa_environment_arn" {
-  description = "ARN do ambiente MWAA"
-  value       = module.mwaa.environment_arn
+  description = "ARN do ambiente MWAA (mode=mwaa)"
+  value       = var.orchestrator_mode == "mwaa" ? module.mwaa[0].environment_arn : null
 }
 
 output "mwaa_webserver_url" {
-  description = "URL da UI Airflow (PUBLIC_ONLY)"
-  value       = module.mwaa.webserver_url
+  description = "URL da UI Airflow MWAA (mode=mwaa)"
+  value       = var.orchestrator_mode == "mwaa" ? module.mwaa[0].webserver_url : null
 }
 
 output "mwaa_execution_role_arn" {
-  description = "Execution role do MWAA (U2–U4 anexam policies adicionais)"
-  value       = module.identity.execution_role_arn
+  description = "Execution role MWAA (mode=mwaa; use orchestrator_role_arn para contrato genérico)"
+  value       = var.orchestrator_mode == "mwaa" ? module.identity[0].execution_role_arn : null
 }
 
 # --- U2 outputs (contrato shared) ---
@@ -173,4 +208,36 @@ output "ecs_task_role_arn" {
 output "ecs_execution_role_arn" {
   description = "IAM execution role ECS"
   value       = module.ecs_executor.execution_role_arn
+}
+
+# --- U4 outputs ---
+
+output "sns_topic_arn" {
+  description = "ARN do tópico SNS de status do DAG"
+  value       = module.sns.topic_arn
+}
+
+output "sns_topic_name" {
+  description = "Nome do tópico SNS de status do DAG"
+  value       = module.sns.topic_name
+}
+
+output "airflow_variables_map" {
+  description = "Mapa lab_* para scripts/set-airflow-variables (colar via SSM)"
+  value = {
+    lab_aws_region           = var.aws_region
+    lab_lambda_function_name = module.lambda_executor.function_name
+    lab_glue_job_name        = module.glue_job.job_name
+    lab_ecs_cluster          = module.ecs_executor.cluster_name
+    lab_ecs_task_definition  = module.ecs_executor.task_definition_arn
+    lab_ecs_subnets          = join(",", module.network.private_subnet_ids)
+    lab_ecs_security_groups  = module.ecs_executor.security_group_id
+    lab_athena_workgroup     = module.athena.workgroup_name
+    lab_glue_database        = module.glue_catalog.database_name
+    lab_sns_topic_arn        = module.sns.topic_arn
+    lab_athena_output_s3     = "s3://${module.data_lake.athena_results_bucket_name}/"
+    lab_e2e_enable_select    = "false"
+    lab_e2e_schedule         = ""
+    lab_airflow_ui_base      = var.orchestrator_mode == "ec2" ? coalesce(module.airflow_ec2[0].ui_url, "") : ""
+  }
 }

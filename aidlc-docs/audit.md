@@ -715,3 +715,410 @@ o padrão mais simples e seguro e diga qual escolheu."
 **Context**: CONSTRUCTION - U3 Code Generation awaiting explicit approval
 
 ---
+
+## Change Request - EC2 Docker Orchestrator (replacing MWAA)
+**Timestamp**: 2026-08-24T00:44:00Z
+**User Input**: "B) EC2 + Docker Compose na AWS. O MWAA está bloqueado pelo Free Tier (créditos), e o objetivo é ter o orquestrador hospedado na nuvem sem o custo do serviço gerenciado. Uma EC2 t3.medium na VPC do lab roda o Airflow 2.11.2 em Docker, usando instance role (sem chaves) para orquestrar o lake de U2/U3 que já foi provisionado. Custo ~US$ 1–2/dia, controlado por stop/terminate. Descartado C (local-runner em Fargate dá o custo/complexidade do MWAA sem o "gerenciado", e ainda exige Postgres via RDS/Aurora). D (upgrade + MWAA real) fica reservado para caso surja necessidade concreta do produto gerenciado."
+**AI Response**: "Started new adaptive Inception for orchestrator pivot. Workspace Detection: brownfield change on existing lab (U1-U3 code present). Reverse Engineering skipped (inception + construction docs current). Proceeding to Requirements Analysis with clarification questions."
+**Context**: INCEPTION - Workspace Detection complete; Requirements Analysis starting
+
+---
+
+## EC2 Orchestrator Requirements - Answers Received
+**Timestamp**: 2026-08-24T00:48:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=B, Q2=B, Q3=A, Q4=A, Q5=A, Q6=C, Q7=B; Security=B, Resiliency=B, PBT=C. Generated ec2-airflow-orchestrator-requirements.md; amended baseline requirements.md; extensions remain disabled. Awaiting explicit requirements approval. User Stories recommended skip."
+**Context**: INCEPTION - Requirements Analysis complete, approval gate
+
+---
+
+## EC2 Orchestrator Requirements - Approval Prompt Presented
+**Timestamp**: 2026-08-24T00:48:30Z
+**User Input**: "(none - AI presenting completion)"
+**AI Response**: "Presented Requirements Analysis completion; next stage Workflow Planning if approved (User Stories skippable)."
+**Context**: INCEPTION - awaiting Aprovar e Continuar / Solicitar Alteracoes / Adicionar Historias
+
+---
+
+## EC2 Orchestrator Requirements - Approved
+**Timestamp**: 2026-08-24T00:50:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Requirements approved. User Stories skipped. Created ec2-airflow-orchestrator-execution-plan.md (App Design EXECUTE; Units SKIP; Construction FD/NFR/NFRD/ID/CG + BT). Awaiting workflow plan approval."
+**Context**: INCEPTION - Workflow Planning
+
+---
+
+## EC2 Orchestrator Workflow Planning - Approval Prompt Presented
+**Timestamp**: 2026-08-24T00:51:00Z
+**User Input**: "(none - AI presenting plan)"
+**AI Response**: "Presented execution plan for EC2 orchestrator change; next stage Application Design if approved."
+**Context**: INCEPTION - awaiting Aprovar e Continuar / Solicitar Alteracoes / Adicionar Estagios
+
+---
+
+## EC2 Orchestrator Workflow Planning - Approved
+**Timestamp**: 2026-08-24T00:51:30Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Workflow plan approved. Started Application Design Part 1: created ec2-airflow-orchestrator-application-design-plan.md with design Q1-Q6. Awaiting user answers."
+**Context**: INCEPTION - Application Design planning
+
+---
+
+## EC2 Application Design Plan - Answers Received
+**Timestamp**: 2026-08-24T00:54:30Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=A AL2023, Q2=B SSM-only no:22, Q3=B compose on artifacts bucket, Q4=A airflow_ec2, Q5=B no EIP, Q6=A no MWAA role in ec2 mode. Awaiting Aprovar plano de design before artifact generation."
+**Context**: INCEPTION - Application Design plan approval gate
+
+---
+
+## EC2 Application Design Plan - Approved / Artifacts Generated
+**Timestamp**: 2026-08-24T00:56:00Z
+**User Input**: "Aprovar plano de design"
+**AI Response**: "Updated components, component-methods, services, component-dependency, application-design, unit-of-work for OrchestratorEC2 default. Checklist marked complete. Awaiting Application Design approval to enter Construction Functional Design."
+**Context**: INCEPTION - Application Design Part 2 complete; approval gate
+
+---
+
+## EC2 Application Design - Approved / Functional Design Planning
+**Timestamp**: 2026-08-24T00:58:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Application Design approved. Units Generation remains skipped. Created u1-orchestrator-ec2-functional-design-plan.md with Q1-Q7. Awaiting user answers."
+**Context**: CONSTRUCTION - U1-orchestrator-ec2 Functional Design Part 1
+
+---
+
+## U1-orchestrator-ec2 Functional Design Plan - Answers Received
+**Timestamp**: 2026-08-24T00:59:30Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=A, Q2=A, Q3=B smoke DAGs, Q4=B SSM Parameter password, Q5=A 5min sync, Q6=B retries then fail, Q7=A metadata survives stop/start. Awaiting Aprovar plano de design funcional."
+**Context**: CONSTRUCTION - Functional Design plan approval gate
+
+---
+
+## U1-orchestrator-ec2 Functional Design - Plan Approved / Artifacts Generated
+**Timestamp**: 2026-08-24T01:00:30Z
+**User Input**: "Aprovar plano de design funcional"
+**AI Response**: "Generated business-logic-model, business-rules, domain-entities under u1-orchestrator-ec2/functional-design. Awaiting Continuar para NFR Requirements or Solicitar Alteracoes."
+**Context**: CONSTRUCTION - Functional Design complete; 2-option gate
+
+---
+
+## U1-orchestrator-ec2 Functional Design - Approved
+**Timestamp**: 2026-08-24T01:01:30Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "Functional Design approved. Created u1-orchestrator-ec2-nfr-requirements-plan.md with Q1-Q8. Awaiting user answers."
+**Context**: CONSTRUCTION - NFR Requirements Part 1
+
+---
+
+## U1-orchestrator-ec2 NFR Requirements Plan - Answers Received
+**Timestamp**: 2026-08-24T01:03:30Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=B headroom doc, Q2=A no SLO, Q3=B RTO soft 1h, Q4=B IMDSv2+SSE, Q5=B digest pin, Q6=B status check alarm, Q7=B CostCenter tag, Q8=B status script. Awaiting Aprovar plano NFR."
+**Context**: CONSTRUCTION - NFR Requirements plan approval gate
+
+---
+
+## U1-orchestrator-ec2 NFR Requirements - Plan Approved / Artifacts Generated
+**Timestamp**: 2026-08-24T01:04:30Z
+**User Input**: "Aprovar plano NFR"
+**AI Response**: "Generated nfr-requirements.md and tech-stack-decisions.md for u1-orchestrator-ec2. Awaiting Continuar para NFR Design or Solicitar Alteracoes."
+**Context**: CONSTRUCTION - NFR Requirements complete; 2-option gate
+
+---
+
+## U1-orchestrator-ec2 NFR Requirements - Approved / NFR Design Planning
+**Timestamp**: 2026-08-24T01:05:30Z
+**User Input**: "pronto"
+**AI Response**: "Treated as NFR Requirements approval. Created u1-orchestrator-ec2-nfr-design-plan.md with Q1-Q6. Awaiting user answers."
+**Context**: CONSTRUCTION - NFR Design Part 1
+
+---
+
+## U1-orchestrator-ec2 NFR Design Plan - Answers Received
+**Timestamp**: 2026-08-24T01:06:30Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=C retries+systemd, Q2=A scale-by-config, Q3=B docker pre-pull, Q4=B S3 endpoint, Q5=C journald+alarm, Q6=A six logical components. Awaiting Aprovar plano NFR Design."
+**Context**: CONSTRUCTION - NFR Design plan approval gate
+
+---
+
+## U1-orchestrator-ec2 NFR Design - Plan Approved / Artifacts Generated
+**Timestamp**: 2026-08-24T01:07:30Z
+**User Input**: "Aprovar plano NFR Design"
+**AI Response**: "Generated nfr-design-patterns.md and logical-components.md. Awaiting Continuar para Infrastructure Design or Solicitar Alteracoes."
+**Context**: CONSTRUCTION - NFR Design complete; 2-option gate
+
+---
+
+## U1-orchestrator-ec2 NFR Design - Approved / Infrastructure Design Planning
+**Timestamp**: 2026-08-24T01:08:30Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "NFR Design approved. Created u1-orchestrator-ec2-infrastructure-design-plan.md with Q1-Q9. Awaiting user answers."
+**Context**: CONSTRUCTION - Infrastructure Design Part 1
+
+---
+
+## U1-orchestrator-ec2 Infrastructure Design Plan - Answers Received
+**Timestamp**: 2026-08-24T01:10:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1=B 30GiB gp3, Q2=A count switch, Q3=B airflow_ec2_identity submodule, Q4=B SG in module, Q5=A files in module, Q6=A SSM placeholder, Q7=A alarm in module, Q8=B orchestrator_role_arn generic, Q9=A update shared-infra. Awaiting Aprovar plano de infraestrutura."
+**Context**: CONSTRUCTION - Infrastructure Design plan approval gate
+
+---
+
+## U1-orchestrator-ec2 Infrastructure Design - Plan Approved / Artifacts Generated
+**Timestamp**: 2026-08-24T01:11:00Z
+**User Input**: "Aprovar plano de infraestrutura"
+**AI Response**: "Generated infrastructure-design.md, deployment-architecture.md; updated shared-infrastructure.md. Awaiting Continuar para Geração de Código or Solicitar Alteracoes."
+**Context**: CONSTRUCTION - Infrastructure Design complete; 2-option gate
+
+---
+
+## U1-orchestrator-ec2 Infrastructure Design - Approved / Code Gen Planning
+**Timestamp**: 2026-08-24T01:12:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "Infrastructure Design approved. Created u1-orchestrator-ec2-code-generation-plan.md (9 steps). Awaiting Aprovar plano de código."
+**Context**: CONSTRUCTION - Code Generation Part 1
+
+---
+
+## U1-orchestrator-ec2 Code Generation - Plan Approved
+**Timestamp**: 2026-08-24T01:15:00Z
+**User Input**: "Aprovar plano de código U1"
+**AI Response**: "Code generation Part 2 executed: airflow_ec2 + airflow_ec2_identity modules, root wiring, scripts, placeholder DAG, README. terraform validate OK. Awaiting 2-option gate."
+**Context**: CONSTRUCTION - Code Generation Part 2 complete
+
+---
+
+## Operator lab documentation
+**Timestamp**: 2026-08-24T01:28:00Z
+**User Input**: "documente como usar, ligar, desliga tudo que o usuario precise para estudar com essa infraestrutura."
+**AI Response**: "Created docs/lab-guide.md; rewrote README with daily PowerShell flow; added airflow-ec2-start.ps1 and airflow-ec2-stop.ps1."
+**Context**: Operator documentation for study/lab use
+
+---
+
+## U1-orchestrator-ec2 Code Generation - Approved / Build and Test
+**Timestamp**: 2026-08-25T22:35:00Z
+**User Input**: "Continuar"
+**AI Response**: "Code Generation approved. Generated build-and-test/ instructions (build, unit, integration, performance, e2e, summary). Awaiting Build and Test approval gate."
+**Context**: CONSTRUCTION - Build and Test complete
+
+---
+
+## Build and Test - Approved / Operations Placeholder
+**Timestamp**: 2026-08-25T22:45:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Build and Test approved. CONSTRUCTION complete for U1-EC2 delta. Operations placeholder documented. Next: U4 Orchestration and Notify."
+**Context**: OPERATIONS placeholder; workflow CONSTRUCTION closed
+
+---
+
+## U4 Inception — User start
+**Timestamp**: 2026-08-26T00:00:00Z
+**User Input**: "inicie"
+**AI Response**: "Resumed U4 Orchestration and Notify. Workspace detection: brownfield, RE skipped. Created u4-orchestration-notify-requirements-questions.md (10 questions). Awaiting answers."
+**Context**: INCEPTION — U4 Requirements Analysis
+
+---
+
+## U4 Requirements — Answers received
+**Timestamp**: 2026-08-26T00:14:00Z
+**User Input**: "pronto."
+**AI Response**: "Validated Q1–Q10 answers (no ambiguities). Generated u4-orchestration-notify-requirements.md. Security Baseline Enabled=No. Awaiting approval before Workflow Planning."
+**Context**: INCEPTION — U4 Requirements Analysis complete (pending approval)
+**Answers captured**:
+- Q1=B (Security Baseline off)
+- Q2=A (replace placeholder with lab_pipeline_e2e.py)
+- Q3=B (Glue ∥ ECS after Lambda)
+- Q4=C (manual + optional Airflow Variable schedule)
+- Q5=C (SHOW TABLES + optional SELECT with sensor)
+- Q6=B (SNS + optional email subscription)
+- Q7=A (success task JSON + on_failure_callback)
+- Q8=B (SNS+Athena+GetTable/GetWorkGroup)
+- Q9=A (amazon provider for 2.11.2)
+- Q10=A (README + lab-guide)
+
+---
+
+## U4 Requirements — Approval prompt
+**Timestamp**: 2026-08-26T00:14:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented requirements completion gate: Solicitar Alterações | Aprovar e Continuar → U4 Workflow Planning."
+**Context**: INCEPTION — awaiting explicit requirements approval
+
+---
+
+## U4 Requirements — Approved / Workflow Planning
+**Timestamp**: 2026-08-26T00:19:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "U4 requirements approved. Created u4-orchestration-notify-execution-plan.md. Recommended: SKIP AD/UG/US; EXECUTE FD→NFRA→NFRD→ID→CG→BT. Awaiting plan approval."
+**Context**: INCEPTION — U4 Workflow Planning complete (pending approval)
+
+---
+
+## U4 Workflow Planning — Approval prompt
+**Timestamp**: 2026-08-26T00:19:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented workflow plan gate with override options for SKIP stages."
+**Context**: INCEPTION — awaiting explicit workflow plan approval
+
+---
+
+## U4 Workflow Planning — Approved / Functional Design Planning
+**Timestamp**: 2026-08-26T00:20:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Workflow plan approved. Created u4-orchestration-notify-functional-design-plan.md with 9 questions. Awaiting answers."
+**Context**: CONSTRUCTION — U4 Functional Design Part 1
+
+---
+
+## U4 Functional Design — Answers received / Artifacts generated
+**Timestamp**: 2026-08-26T03:42:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1–Q9. Generated business-logic-model.md, business-rules.md, domain-entities.md. Awaiting 2-option FD approval gate."
+**Context**: CONSTRUCTION — U4 Functional Design Part 2 complete
+**Answers**: Q1=A, Q2=C, Q3=A, Q4=A, Q5=A, Q6=B, Q7=B, Q8=A, Q9=A
+
+---
+
+## U4 Functional Design — Approval prompt
+**Timestamp**: 2026-08-26T03:42:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented FD completion gate: Solicitar Alterações | Continuar para NFR Requirements."
+**Context**: CONSTRUCTION — awaiting explicit FD approval
+
+---
+
+## U4 Functional Design — Approved / NFR Requirements Planning
+**Timestamp**: 2026-08-26T03:43:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "FD approved. Created u4-orchestration-notify-nfr-requirements-plan.md (9 questions). Awaiting answers."
+**Context**: CONSTRUCTION — U4 NFR Requirements Part 1
+
+---
+
+## U4 NFR Requirements — Answers received / Artifacts generated
+**Timestamp**: 2026-08-26T03:45:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1–Q9. Generated nfr-requirements.md and tech-stack-decisions.md. Awaiting 2-option NFR approval gate."
+**Context**: CONSTRUCTION — U4 NFR Requirements Part 2 complete
+**Answers**: Q1=A, Q2=A, Q3=B, Q4=B, Q5=B, Q6=A, Q7=A, Q8=B, Q9=B
+
+---
+
+## U4 NFR Requirements — Approval prompt
+**Timestamp**: 2026-08-26T03:45:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented NFR Requirements completion gate: Solicitar Alterações | Continuar para NFR Design."
+**Context**: CONSTRUCTION — awaiting explicit NFR Requirements approval
+
+---
+
+## U4 NFR Requirements — Approved / NFR Design Planning
+**Timestamp**: 2026-08-26T03:46:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "NFR Requirements approved. Created u4-orchestration-notify-nfr-design-plan.md (7 questions). Awaiting answers."
+**Context**: CONSTRUCTION — U4 NFR Design Part 1
+
+---
+
+## U4 NFR Design — Answers received / Artifacts generated
+**Timestamp**: 2026-08-26T03:47:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1–Q7. Generated nfr-design-patterns.md and logical-components.md. Awaiting 2-option NFR Design approval gate."
+**Context**: CONSTRUCTION — U4 NFR Design Part 2 complete
+**Answers**: Q1=A, Q2=A, Q3=B (bootstrap pip), Q4=A, Q5=A, Q6=A, Q7=B
+
+---
+
+## U4 NFR Design — Approval prompt
+**Timestamp**: 2026-08-26T03:47:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented NFR Design completion gate: Solicitar Alterações | Continuar para Infrastructure Design."
+**Context**: CONSTRUCTION — awaiting explicit NFR Design approval
+
+---
+
+## U4 NFR Design — Approved / Infrastructure Design Planning
+**Timestamp**: 2026-08-26T03:48:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "NFR Design approved. Created u4-orchestration-notify-infrastructure-design-plan.md (9 questions). Awaiting answers."
+**Context**: CONSTRUCTION — U4 Infrastructure Design Part 1
+
+---
+
+## U4 Infrastructure Design — Answers received / Artifacts generated
+**Timestamp**: 2026-08-26T03:50:00Z
+**User Input**: "pronto"
+**AI Response**: "Validated Q1–Q9. Generated infrastructure-design.md, deployment-architecture.md; updated shared-infrastructure.md. Awaiting 2-option Infra Design approval gate."
+**Context**: CONSTRUCTION — U4 Infrastructure Design Part 2 complete
+**Answers**: Q1=A, Q2=A, Q3=B (IAM no root), Q4=A, Q5=A, Q6=A, Q7=A, Q8=B, Q9=A
+
+---
+
+## U4 Infrastructure Design — Approval prompt
+**Timestamp**: 2026-08-26T03:50:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented Infra Design completion gate: Solicitar Alterações | Continuar para Code Generation."
+**Context**: CONSTRUCTION — awaiting explicit Infrastructure Design approval
+
+---
+
+## U4 Infrastructure Design — Approved / Code Generation Planning
+**Timestamp**: 2026-08-26T03:52:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "Infra Design approved. Created u4-orchestration-notify-code-generation-plan.md (9 steps). Awaiting Aprovar plano de código U4."
+**Context**: CONSTRUCTION — U4 Code Generation Part 1
+
+---
+
+## U4 Code Generation — Plan approval prompt
+**Timestamp**: 2026-08-26T03:52:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented code generation plan for approval before Part 2 execution."
+**Context**: CONSTRUCTION — awaiting explicit code gen plan approval
+
+---
+
+## U4 Code Generation — Plan Approved / Part 2 Executed
+**Timestamp**: 2026-08-26T03:53:00Z
+**User Input**: "Aprovar plano de código U4"
+**AI Response**: "Executed Part 2: modules/sns, root IAM/outputs, requirements+bootstrap, lab_pipeline_e2e DAG, set-airflow-variables scripts, docs. terraform validate OK. Awaiting 2-option gate."
+**Context**: CONSTRUCTION — U4 Code Generation Part 2 complete
+
+---
+
+## U4 Code Generation — Approval prompt
+**Timestamp**: 2026-08-26T03:54:00Z
+**User Input**: "(pending)"
+**AI Response**: "Presented Code Generation completion gate: Solicitar Alterações | Continuar para Build and Test."
+**Context**: CONSTRUCTION — awaiting explicit Code Generation approval
+
+---
+
+## U4 Code Generation — Approved / Build and Test
+**Timestamp**: 2026-08-26T03:58:00Z
+**User Input**: "Continuar para o Próximo Estágio"
+**AI Response**: "Code Generation approved. Updated build-and-test/ for U4 (build, unit, integration, performance, e2e, summary). Awaiting Build and Test → Operations gate."
+**Context**: CONSTRUCTION — U4 Build and Test complete (pending approval)
+
+---
+
+## U4 Build and Test — Approval prompt
+**Timestamp**: 2026-08-26T03:58:30Z
+**User Input**: "(pending)"
+**AI Response**: "Presented Build and Test completion gate: ready for Operations?"
+**Context**: CONSTRUCTION — awaiting explicit Build and Test approval
+
+---
+
+## U4 Build and Test — Approved / Operations Placeholder
+**Timestamp**: 2026-08-26T04:00:00Z
+**User Input**: "Aprovar e Continuar"
+**AI Response**: "Build and Test approved. CONSTRUCTION U4 closed. Operations placeholder updated (U1–U4 done; manual runbooks). Workflow AI-DLC for U4 complete."
+**Context**: OPERATIONS placeholder; U4 product unit Construction closed
+
+---

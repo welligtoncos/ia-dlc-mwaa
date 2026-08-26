@@ -1,107 +1,161 @@
 # ia-dlc-mwaa
 
-Laboratório IaC: plataforma de dados AWS orquestrada por **Amazon MWAA**, com data lake, Lake Formation, Glue, Athena e executors de compute.
+Plataforma de dados na AWS provisionada com Terraform: orquestração Airflow, data lake com governança Lake Formation, executors serverless/containers e pipeline E2E com notificação SNS.
 
-## Estado atual (U1 + U2 + U3)
+Desenvolvido com o workflow [AI-DLC](aidlc-docs/) (Inception → Construction). Uso típico: laboratório de estudos e demonstração de arquitetura — não é um produto de produção.
 
-### U1 — Foundation
-- VPC (`10.10.0.0/16`), 1 NAT, 2 subnets privadas, SG MWAA
-- **S3 Gateway VPC Endpoint**
-- Bucket de artefatos Airflow (versioning + BPA + SSE-S3)
-- IAM execution role (least privilege base)
-- Ambiente MWAA `mw1.small` (Airflow default `2.11.2`, UI **PUBLIC_ONLY**)
+---
 
-### U2 — Data Lake and Governance
-- Buckets data + athena-results (BPA, SSE-S3, deny HTTP, results lifecycle 7d)
-- Glue Database + crawlers raw/processed (on-demand)
-- Lake Formation tags/grants; Athena workgroup enforce
-- `scripts/seed-sample.sh`
+## Arquitetura
 
-### U3 — Compute Executors
-- Lambda `{prefix}lambda-marker` (Python 3.12, marker em `raw/dt=`)
-- Glue Job `{prefix}glue-passthrough` (Glue 4.0, G.1X×2, script no artifact bucket)
-- ECS Fargate task (sem Service) — marker via AWS CLI; subnets privadas
-- Policy aditiva MWAA (Invoke / StartJobRun / RunTask / PassRole)
-- `scripts/smoke-compute.sh`
+```text
+                    ┌─────────────────────────────────────────┐
+                    │         VPC (10.10.0.0/16)              │
+                    │                                         │
+  Operator ────────►│  EC2 Airflow 2.11.2 (:8080)             │
+  (CIDR /32)        │  Docker Compose · LocalExecutor         │
+                    │         │                               │
+                    │         ▼                               │
+                    │  Lambda · Glue Job · ECS Fargate        │
+                    │         │                               │
+                    │         ▼                               │
+                    │  S3 Data Lake · Glue Catalog · Athena   │
+                    │  Lake Formation (LF-Tags + grants)      │
+                    │         │                               │
+                    │         ▼                               │
+                    │  SNS (status do pipeline)               │
+                    └─────────────────────────────────────────┘
+                                      │
+                                      ▼
+                              S3 Artifact Bucket
+                           (DAGs · Compose · requirements)
+```
 
-## Avisos de segurança / custo
+| Camada | Componentes |
+|---|---|
+| **Orquestração (U1)** | EC2 + Docker Compose (Airflow **2.11.2**) — padrão; MWAA opcional |
+| **Data lake (U2)** | S3 raw/processed, Glue Catalog/Crawlers, Lake Formation, Athena |
+| **Compute (U3)** | Lambda marker, Glue Job, ECS Fargate |
+| **E2E + notify (U4)** | DAG `lab_pipeline_e2e`, SNS, Airflow Variables |
 
-- UI MWAA **PUBLIC_ONLY** é decisão de PoC — não use assim em produção.
-- **1 NAT** é SPOF consciente (custo); ECS Fargate depende do NAT para pull/API.
-- State Terraform é **local** — faça backup do `terraform.tfstate`.
-- **Lake Formation Data Lake administrator** deve existir na conta **antes** do apply U2.
+**Pipeline E2E:** Lambda → Glue ∥ ECS → Athena → SNS.
+
+---
 
 ## Pré-requisitos
 
-1. Terraform `>= 1.5`
-2. AWS CLI v2 (`aws sts get-caller-identity`)
-3. Permissões ≈ `policies/terraform-apply-policy.json`
-4. LF admins configurados (U2)
+| Item | Observação |
+|---|---|
+| Terraform ≥ 1.5 | No `PATH` do PowerShell (Windows) |
+| AWS CLI v2 | Conta autenticada (`aws sts get-caller-identity`) |
+| IAM | Permissões alinhadas a `policies/terraform-apply-policy.json` |
+| Lake Formation | Seu usuário/role como Data Lake administrator (U2) |
+| Rede | `operator_cidr` = IP público `/32` para a UI Airflow |
 
-## Apply
+---
 
-```bash
+## Início rápido (PowerShell)
+
+```powershell
+cd <repo-root>
+
+# 1. Configuração
+Copy-Item terraform\example.tfvars terraform\terraform.tfvars
+# Edite: operator_cidr = "SEU_IP/32"
+
+# 2. Provisionar
+.\scripts\apply.ps1
+
+# 3. Publicar DAGs e validar orquestrador
+.\scripts\sync-dags.ps1
+.\scripts\airflow-ec2-status.ps1   # alvo: ui_health = OK
+
+# 4. UI — http://<public_ip>:8080  (user: admin)
+aws ssm get-parameter `
+  --name "$(terraform -chdir=terraform output -raw airflow_ui_password_ssm_param)" `
+  --with-decryption --query Parameter.Value --output text
+
+# 5. Encerrar a sessão (economia de custo)
+.\scripts\airflow-ec2-stop.ps1
+```
+
+Retomar no dia seguinte: `.\scripts\airflow-ec2-start.ps1` → aguardar `ui_health: OK` → trabalhar → `stop`.
+
+> Guia operacional completo: [`docs/lab-guide.md`](docs/lab-guide.md)
+
+---
+
+## Pipeline E2E (U4)
+
+1. `.\scripts\apply.ps1` — SNS + IAM `sns:Publish` na role do orquestrador  
+2. `.\scripts\sync-dags.ps1` — publica `dags/lab_pipeline_e2e.py` e `requirements.txt`  
+3. `.\scripts\set-airflow-variables.ps1` — gera `airflow variables set ...` (aplicar via SSM no container **scheduler**)  
+4. UI → unpause + **Trigger** `lab_pipeline_e2e`  
+5. Verificar SNS: tópico `{prefix}pipeline-status` (subject `lab_pipeline_e2e SUCCESS`)  
+6. `.\scripts\airflow-ec2-stop.ps1`
+
+**Sucesso esperado:** tasks verdes (Lambda → Glue ∥ ECS → Athena → SNS) e mensagem SNS com `"status": "success"`.
+
+---
+
+## Scripts
+
+| Ação | Windows | Linux / Git Bash |
+|---|---|---|
+| Terraform apply | `.\scripts\apply.ps1` | `bash scripts/apply.sh` |
+| Status / health da UI | `.\scripts\airflow-ec2-status.ps1` | `bash scripts/airflow-ec2-status.sh` |
+| Start / stop EC2 | `airflow-ec2-start.ps1` / `stop.ps1` | equivalentes `.sh` |
+| Sync DAGs | `.\scripts\sync-dags.ps1` | `bash scripts/sync-dags.sh` |
+| Airflow Variables | `.\scripts\set-airflow-variables.ps1` | `bash scripts/set-airflow-variables.sh` |
+| Seed data lake | — | `bash scripts/seed-sample.sh` |
+| Smoke U3 | — | `bash scripts/smoke-compute.sh` |
+
+---
+
+## Custo e segurança
+
+- **Pare a EC2** quando não estiver em uso (`airflow-ec2-stop`) — principal alavanca de custo.  
+- NAT Gateway permanece enquanto a stack existir (custo residual até `destroy`).  
+- UI `:8080` restrita a `operator_cidr` (`/32`). Acesso ao host via **SSM** (sem SSH).  
+- IP público da EC2 **muda** após stop/start — use `airflow-ec2-status.ps1`.  
+- State Terraform é **local** (`terraform/terraform.tfstate`) — faça backup.  
+- Free Tier: prefira `t3.small` / `t3.micro` em `terraform.tfvars`.
+
+```powershell
 cd terraform
-terraform init
-terraform plan
-terraform apply
+terraform destroy -var-file=terraform.tfvars
 ```
 
-Ou: `bash scripts/apply.sh`
+---
 
-## U2 — seed / crawler / Athena
-
-```bash
-bash scripts/seed-sample.sh
-aws glue start-crawler --name "$(terraform -chdir=terraform output -raw raw_crawler_name)"
-```
-
-## U3 — smoke compute
-
-```bash
-bash scripts/smoke-compute.sh
-```
-
-Exemplos manuais:
-
-```bash
-# Lambda
-aws lambda invoke --function-name "$(terraform -chdir=terraform output -raw lambda_function_name)" \
-  --payload '{"source":"cli"}' --cli-binary-format raw-in-base64-out out.json
-
-# Glue
-aws glue start-job-run --job-name "$(terraform -chdir=terraform output -raw glue_job_name)"
-
-# ECS (preencha subnets/SG via outputs)
-aws ecs run-task \
-  --cluster "$(terraform -chdir=terraform output -raw ecs_cluster_name)" \
-  --launch-type FARGATE \
-  --task-definition "$(terraform -chdir=terraform output -raw ecs_task_definition_arn)" \
-  --network-configuration "awsvpcConfiguration={subnets=[subnet-a,subnet-b],securityGroups=[sg-x],assignPublicIp=DISABLED}"
-```
-
-**PassRole**: a execution role MWAA só pode passar as roles Glue/ECS U3 (least privilege).
-
-## Sync de DAGs (U4)
-
-```bash
-bash scripts/sync-dags.sh
-```
-
-## Destroy
-
-```bash
-cd terraform && terraform destroy
-```
-
-## Estrutura
+## Estrutura do repositório
 
 ```text
-terraform/modules/{network,artifact_store,identity,mwaa,data_lake,glue_catalog,lake_formation,athena,lambda_executor,glue_job,ecs_executor}/
-src/lambda_marker/   # handler.py
-src/glue/            # glue_passthrough.py
-scripts/             # apply, sync-dags, seed-sample, smoke-compute
-samples/
-dags/                # U4
-aidlc-docs/
+├── dags/                 # DAGs Airflow (lab_pipeline_e2e)
+├── docs/
+│   ├── lab-guide.md      # Operação do laboratório
+│   └── runbooks/         # Postmortems / recuperação
+├── terraform/            # Root + modules (U1–U4)
+├── scripts/              # Apply, lifecycle EC2, sync, seed, smoke
+├── src/                  # Código Lambda / Glue
+├── samples/              # Dados de exemplo
+├── policies/             # IAM de referência para apply
+└── aidlc-docs/           # Artefatos AI-DLC (requisitos, design, planos)
 ```
+
+---
+
+## Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [`docs/lab-guide.md`](docs/lab-guide.md) | Provisionar, rotina diária, U2–U4, troubleshooting |
+| [`docs/runbooks/airflow-ec2-bootstrap-postmortem.md`](docs/runbooks/airflow-ec2-bootstrap-postmortem.md) | CRLF, volumes, pip, região, IMDS hop limit |
+| [`aidlc-docs/`](aidlc-docs/) | Estado do workflow, requisitos e designs por unidade |
+
+---
+
+## Licença e escopo
+
+Projeto educacional / demonstração de arquitetura AWS + Terraform + Airflow.  
+Ajuste sizing, CIDR, tags e políticas antes de qualquer uso além de laboratório.

@@ -1,0 +1,6 @@
+# Force LF for shell scripts and EC2 Airflow compose package (avoids `bash\r` on Linux EC2)
+*.sh text eol=lf
+**/airflow_ec2/files/** text eol=lf
+**/airflow_ec2/templates/** text eol=lf
+*.service text eol=lf
+*.timer text eol=lf

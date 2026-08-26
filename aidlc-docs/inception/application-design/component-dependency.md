@@ -1,13 +1,16 @@
 # Component Dependencies
 
+> **Amendment**: OrchestratorEC2 é o runtime default; OrchestratorMWAA só no modo mwaa.
+
 ## Dependency Matrix
 
 | Component | Depends On | Depended By |
 |---|---|---|
-| NetworkFabric | — | OrchestratorMWAA, ContainerExecutor |
-| ArtifactStore | — | OrchestratorMWAA, PipelineApp |
+| NetworkFabric | — | OrchestratorEC2, OrchestratorMWAA, ContainerExecutor |
+| ArtifactStore | — | OrchestratorEC2, DagSyncAgent, OrchestratorMWAA, PipelineApp |
 | DataLakeStore | — | CatalogService, EtlExecutor, GovernancePlane, QueryService, PipelineApp |
-| IdentityPlane | ArtifactStore, DataLakeStore, executors (ARNs) | OrchestratorMWAA |
+| IdentityPlane | ArtifactStore, DataLakeStore, executors (ARNs) | OrchestratorEC2 (default), OrchestratorMWAA (optional) |
+| DagSyncAgent | ArtifactStore, OrchestratorEC2 | PipelineApp (indirect) |
 | ServerlessExecutor | Identity (local role) | PipelineApp, IdentityPlane (invoke grant) |
 | EtlExecutor | DataLakeStore, CatalogService | PipelineApp, IdentityPlane |
 | CatalogService | DataLakeStore | GovernancePlane, QueryService, PipelineApp |
@@ -15,24 +18,26 @@
 | GovernancePlane | DataLakeStore, CatalogService | QueryService, PipelineApp |
 | QueryService | DataLakeStore, GovernancePlane | PipelineApp |
 | NotifyService | — | PipelineApp, IdentityPlane |
-| OrchestratorMWAA | NetworkFabric, ArtifactStore, IdentityPlane | PipelineApp (runtime) |
-| PipelineApp | OrchestratorMWAA + all compute/query/notify capabilities | — (end user journeys) |
+| OrchestratorEC2 | NetworkFabric, ArtifactStore, IdentityPlane | PipelineApp (runtime default) |
+| OrchestratorMWAA | NetworkFabric, ArtifactStore, IdentityPlane | PipelineApp (runtime se mode=mwaa) |
+| PipelineApp | Active orchestrator + compute/query/notify | — |
 
 ## Communication Patterns
 
 | From | To | Pattern | Mechanism |
 |---|---|---|---|
-| Terraform root | modules/* | Composition | module calls |
-| OrchestratorMWAA | ArtifactStore | Read objects | MWAA S3 source bucket |
-| PipelineApp | ServerlessExecutor | Sync invoke | Lambda operator / boto3 |
+| Terraform root | modules/* | Composition | module calls + `orchestrator_mode` |
+| Apply | ArtifactStore | Upload compose package | S3 objects under `airflow-ec2/` |
+| OrchestratorEC2 | ArtifactStore | Pull compose + periodic dags | user_data + DagSyncAgent |
+| PipelineApp | ServerlessExecutor | Sync invoke | Lambda / boto3 (instance role) |
 | PipelineApp | EtlExecutor | Async job | GlueJobOperator |
 | PipelineApp | ContainerExecutor | Run task | EcsRunTaskOperator |
 | PipelineApp | QueryService | Query | AthenaOperator |
-| PipelineApp | NotifyService | Publish | SNS publish / callback |
-| GovernancePlane | DataLakeStore | Control plane | Lake Formation APIs |
-| IdentityPlane | * | Authorize | IAM policies on MWAA role |
+| PipelineApp | NotifyService | Publish | SNS |
+| Operator | OrchestratorEC2 | UI / shell | HTTPS-ish UI :8080 CIDR; SSM Session Manager |
+| IdentityPlane | * | Authorize | IAM on EC2 role (default) |
 
-## Mermaid — Dependency Flow
+## Mermaid — Dependency Flow (mode=ec2)
 
 ```mermaid
 flowchart LR
@@ -47,12 +52,15 @@ flowchart LR
   GP[GovernancePlane]
   QS[QueryService]
   NS[NotifyService]
-  MW[OrchestratorMWAA]
+  EC2[OrchestratorEC2]
+  DS[DagSyncAgent]
   PA[PipelineApp]
 
-  NF --> MW
+  NF --> EC2
   NF --> CE
-  AS --> MW
+  AS --> EC2
+  AS --> DS
+  DS --> EC2
   AS --> PA
   DL --> CS
   DL --> EE
@@ -61,12 +69,8 @@ flowchart LR
   CS --> GP
   CS --> QS
   GP --> QS
-  SE --> IP
-  EE --> IP
-  CE --> IP
-  NS --> IP
-  IP --> MW
-  MW --> PA
+  IP --> EC2
+  EC2 --> PA
   SE --> PA
   EE --> PA
   CE --> PA
@@ -74,7 +78,7 @@ flowchart LR
   NS --> PA
 ```
 
-## ASCII — Layered View
+## ASCII — Layered View (default)
 
 ```
 +---------------------------+
@@ -84,7 +88,8 @@ flowchart LR
               |
               v
 +-------------+-------------+
-|     OrchestratorMWAA      |
+|     OrchestratorEC2       |
+|  Compose + DagSyncAgent   |
 +------+------+------+------+
        |      |      |
        v      v      v
@@ -99,10 +104,11 @@ flowchart LR
                      v
          CatalogService + DataLakeStore
 
-Foundation: NetworkFabric | ArtifactStore | IdentityPlane
+Foundation: NetworkFabric | ArtifactStore | IdentityPlane (EC2 role)
 ```
 
 ## Coupling Notes
-- **Loose**: PipelineApp → capabilities via AWS APIs (names/ARNs as config).
-- **Tight (acceptable)**: OrchestratorMWAA ↔ NetworkFabric/ArtifactStore/IdentityPlane (hard MWAA requirements).
-- **Governance boundary**: Query/ETL should honor LF grants; IdentityPlane must not bypass with broad S3 `*`.
+- **Loose**: PipelineApp → capabilities via AWS APIs (ARNs/config).
+- **Tight (acceptable)**: OrchestratorEC2 ↔ NetworkFabric / ArtifactStore / IdentityPlane.
+- **Mode switch**: `orchestrator_mode` troca o runtime; policies anexam ao principal ativo.
+- **No EIP**: public IP muda em stop/start — documentar no README.

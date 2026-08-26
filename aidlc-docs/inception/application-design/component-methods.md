@@ -3,19 +3,22 @@
 Nível: operações Terraform/AWS de alto nível **e** tasks do DAG (PipelineApp).  
 Regras de negócio detalhadas → Functional Design (Construction).
 
+> **Amendment**: métodos de OrchestratorEC2, DagSyncAgent e IdentityPlane EC2.
+
 ## NetworkFabric
 | Method | Input | Output | Purpose |
 |---|---|---|---|
 | `provision_vpc` | cidrs, azs, tags | vpc_id | Cria VPC com DNS |
 | `provision_subnets` | vpc_id, cidrs | subnet_ids | 2 private + 1 public |
 | `provision_nat_path` | public_subnet_id | nat_id, private_rt | 1 NAT + rotas |
-| `provision_mwaa_sg` | vpc_id | sg_id | SG mínimo MWAA |
+| `provision_mwaa_sg` | vpc_id | sg_id | SG mínimo MWAA (modo mwaa) |
+| `provision_airflow_ec2_sg` | vpc_id, operator_cidr | sg_id | Ingress 8080 do CIDR; egress; sem 22 |
 
 ## ArtifactStore
 | Method | Input | Output | Purpose |
 |---|---|---|---|
 | `create_bucket` | name_prefix, tags | bucket_id, arn | Bucket versionado + BPA |
-| `expose_mwaa_paths` | bucket_id | s3_uris | URIs dags/plugins/requirements |
+| `expose_airflow_paths` | bucket_id | s3_uris | URIs dags/plugins/requirements/airflow-ec2 |
 
 ## DataLakeStore
 | Method | Input | Output | Purpose |
@@ -23,19 +26,37 @@ Regras de negócio detalhadas → Functional Design (Construction).
 | `create_lake_bucket` | name_prefix, tags | bucket_id, arn | Lake + BPA + versioning |
 | `define_prefixes` | bucket_id | raw, processed, athena_results | Layout lógico |
 
+## OrchestratorEC2
+| Method | Input | Output | Purpose |
+|---|---|---|---|
+| `create_instance` | ami AL2023, t3.medium, public_subnet, sg, instance_profile | instance_id, public_ip | EC2 orquestradora |
+| `bootstrap_docker_compose` | s3_uri compose package | running stack | user_data: Docker + pull + `compose up` |
+| `expose_ui` | public_ip, port 8080 | ui_url | Browser do operator_cidr |
+| `enable_ssm` | instance_profile SSM | session access | Sem key pair |
+| `stop_instance` / `start_instance` | instance_id | state | Scripts custo |
+
 ## OrchestratorMWAA
 | Method | Input | Output | Purpose |
 |---|---|---|---|
-| `create_environment` | name, version, class, subnet_ids, sg, source_bucket, exec_role | env_arn, webserver_url | Provisiona MWAA |
+| `create_environment` | name, version, class, subnet_ids, sg, source_bucket, exec_role | env_arn, webserver_url | Só se mode=mwaa |
 | `configure_logging` | env | log_groups | Logs CW |
 | `ignore_artifact_versions` | — | lifecycle meta | ignore requirements/plugins object versions |
 
 ## IdentityPlane
 | Method | Input | Output | Purpose |
 |---|---|---|---|
-| `build_mwaa_execution_policy` | bucket ARNs, service ARNs | policy_json | Least privilege cross-service |
-| `attach_mwaa_policies` | role_name, policies | — | Anexa ao execution role MWAA |
+| `create_airflow_ec2_role` | trust ec2 | role_arn, instance_profile | Role default modo ec2 |
+| `attach_ssm_core` | role | — | AmazonSSMManagedInstanceCore |
+| `build_orchestrator_execution_policy` | bucket/service ARNs | policy_json | Lake + compute + artifacts |
+| `attach_orchestrator_policies` | role_name, policies | — | Anexa ao principal ativo |
+| `create_mwaa_execution_role` | trust airflow.amazonaws.com | role_arn | Só mode=mwaa |
 | `export_terraform_apply_policy` | service list | policy file | Doc/policy do principal apply |
+
+## DagSyncAgent
+| Method | Input | Output | Purpose |
+|---|---|---|---|
+| `periodic_s3_sync` | s3 dags prefix, local path | — | Cron/systemd na EC2 |
+| `operator_sync_dags` | local dags/, bucket | — | `scripts/sync-dags.sh` |
 
 ## ServerlessExecutor
 | Method | Input | Output | Purpose |

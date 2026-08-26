@@ -107,3 +107,43 @@ variable "ecs_memory" {
   description = "Memória Fargate (MiB). Default 512."
   default     = "512"
 }
+
+variable "orchestrator_mode" {
+  type        = string
+  description = "Orquestrador: ec2 (default, Compose na EC2) ou mwaa (managed)."
+  default     = "ec2"
+
+  validation {
+    condition     = contains(["ec2", "mwaa"], var.orchestrator_mode)
+    error_message = "orchestrator_mode must be ec2 or mwaa."
+  }
+}
+
+variable "operator_cidr" {
+  type        = string
+  description = "CIDR permitido na UI Airflow :8080 (mode=ec2). Restrinja ao seu IP/32 em lab compartilhado."
+  default     = "0.0.0.0/0"
+
+  validation {
+    condition     = var.orchestrator_mode != "ec2" || can(cidrhost(var.operator_cidr, 0))
+    error_message = "operator_cidr must be a valid CIDR when orchestrator_mode=ec2."
+  }
+}
+
+variable "airflow_instance_type" {
+  type        = string
+  description = "Tipo da EC2 Airflow. Default t3.medium; contas Free Tier: use t3.small ou t3.micro."
+  default     = "t3.medium"
+}
+
+variable "airflow_image_digest" {
+  type        = string
+  description = "Digest amd64 pinado para apache/airflow:2.11.2."
+  default     = "sha256:a69d3b7e8013f57338ca19a0bc4de862f62af178a21088cd4459f1081911c07c"
+}
+
+variable "sns_notification_email" {
+  type        = string
+  description = "E-mail opcional para subscription SNS do status do DAG (vazio = só tópico)."
+  default     = ""
+}
